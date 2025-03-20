@@ -175,12 +175,13 @@ def get_endpoint_spec(endpoint: Endpoint) -> Dict[str, Any]:
 
     if endpoint.model:
         description = endpoint.model  # TODO: model description. This is just the name.
-        ref = endpoint.model
+        response_model = {"schema": endpoint.model}
     else:
         description = "OK"
-        ref = "dummy"
+        # response_model = {"schema": "dummy"}
+        response_model = {"schema": {"type": "object", "properties": {"status": {"type": "string"}}}}
 
-    content = {"application/json": {"schema": ref}}
+    content = {"application/json": response_model}
     responses = {"200": {"description": description, "content": content}}
     return {method: {"responses": responses}}
 
@@ -199,18 +200,14 @@ def get_spec(models: List[Model], endpoints: List[Endpoint]) -> APISpec:
     endpoints = [ep for ep in endpoints if ep.path.startswith("/captiveportal")]
     #endregion Testing against a single endpoint
 
-    # TODO: figure out why apispec library doesn't like a bare status response
-    # TODO: figure out if there's any consistent pattern to non-model responses
-    dummy_spec = {"type": "string"}
-    spec.components.schema("dummy", dummy_spec)
-
     for model in models:
         component = get_model_spec(model)
         spec.components.schema(model.path, component)
 
     for endpoint in endpoints:
-        operation = get_endpoint_spec(endpoint)
-        spec.path(path=endpoint.path, description=endpoint.description, operations=operation)
+        operations = get_endpoint_spec(endpoint)
+        spec.path(path=endpoint.path, description=endpoint.description, operations=operations)
+
     return spec
 
 
@@ -228,11 +225,9 @@ if __name__ == "__main__":
     endpoints = get_endpoints()
     spec = get_spec(models, endpoints)
 
-    # As of now: apispec is prepending "." to component refs, which breaks the schema.
-    # validate_spec(spec)
+    validate_spec(spec)
 
     yaml = spec.to_yaml()
-
     with open(output_file, "w") as file:
         file.write(yaml)
     print(yaml)

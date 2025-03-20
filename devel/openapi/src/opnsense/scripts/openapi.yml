@@ -7,29 +7,53 @@ paths:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: logon client to zone, must use post type of request
   /captiveportal/accesscontroller/logoff:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: logoff client
   /captiveportal/accesscontroller/status:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: retrieve session info
   /captiveportal/accesscontroller/api:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: 'RFC 8908: Captive Portal API status object  The URI for this endpoint
       can be provisioned to the client as defined by RFC 7710.  Request and response
       must set media type as "application/captive+json".  Response contains the following
@@ -45,199 +69,310 @@ paths:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: reconfigure captive portal
   /captiveportal/servicecontroller/gettemplate:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: ''
   /captiveportal/servicecontroller/savetemplate:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: save template, updates existing or create new.
   /captiveportal/servicecontroller/deltemplate:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: delete template by uuid
   /captiveportal/servicecontroller/searchtemplates:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: search captive portal zones
   /captiveportal/sessioncontroller/list:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: list client sessions
   /captiveportal/sessioncontroller/search:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: search through connected clients
   /captiveportal/sessioncontroller/zones:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: return list of available zones
   /captiveportal/sessioncontroller/disconnect:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: disconnect a client
   /captiveportal/sessioncontroller/connect:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: connect a client
   /captiveportal/settingscontroller/get:
     get:
       responses:
         '200':
+          description: opnsense.captiveportal.captiveportal
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.opnsense.captiveportal.captiveportal'
+                $ref: '#/components/schemas/opnsense.captiveportal.captiveportal'
     description: Retrieve model settings
   /captiveportal/settingscontroller/set:
     post:
       responses:
         '200':
+          description: opnsense.captiveportal.captiveportal
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.opnsense.captiveportal.captiveportal'
+                $ref: '#/components/schemas/opnsense.captiveportal.captiveportal'
     description: Update model settings
   /captiveportal/settingscontroller/getzone:
     get:
       responses:
         '200':
+          description: opnsense.captiveportal.captiveportal
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.opnsense.captiveportal.captiveportal'
+                $ref: '#/components/schemas/opnsense.captiveportal.captiveportal'
     description: retrieve zone settings or return defaults
   /captiveportal/settingscontroller/setzone:
     post:
       responses:
         '200':
+          description: opnsense.captiveportal.captiveportal
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.opnsense.captiveportal.captiveportal'
+                $ref: '#/components/schemas/opnsense.captiveportal.captiveportal'
     description: update zone with given properties
   /captiveportal/settingscontroller/addzone:
     post:
       responses:
         '200':
+          description: opnsense.captiveportal.captiveportal
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.opnsense.captiveportal.captiveportal'
+                $ref: '#/components/schemas/opnsense.captiveportal.captiveportal'
     description: add new zone and set with attributes from post
   /captiveportal/settingscontroller/delzone:
     post:
       responses:
         '200':
+          description: opnsense.captiveportal.captiveportal
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.opnsense.captiveportal.captiveportal'
+                $ref: '#/components/schemas/opnsense.captiveportal.captiveportal'
     description: delete zone by uuid
   /captiveportal/settingscontroller/togglezone:
     post:
       responses:
         '200':
+          description: opnsense.captiveportal.captiveportal
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.opnsense.captiveportal.captiveportal'
+                $ref: '#/components/schemas/opnsense.captiveportal.captiveportal'
     description: toggle zone by uuid (enable/disable)
   /captiveportal/settingscontroller/searchzones:
     get:
       responses:
         '200':
+          description: opnsense.captiveportal.captiveportal
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.opnsense.captiveportal.captiveportal'
+                $ref: '#/components/schemas/opnsense.captiveportal.captiveportal'
     description: search captive portal zones
     post:
       responses:
         '200':
+          description: opnsense.captiveportal.captiveportal
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/.opnsense.captiveportal.captiveportal'
+                $ref: '#/components/schemas/opnsense.captiveportal.captiveportal'
   /captiveportal/vouchercontroller/listproviders:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: list voucher providers (authenticators of type "voucher")
   /captiveportal/vouchercontroller/listvouchergroups:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: list voucher groups
   /captiveportal/vouchercontroller/listvouchers:
     get:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: list vouchers
   /captiveportal/vouchercontroller/dropvouchergroup:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: drop a voucher group
   /captiveportal/vouchercontroller/dropexpiredvouchers:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: drop expired vouchers from group
   /captiveportal/vouchercontroller/generatevouchers:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: generate new vouchers
   /captiveportal/vouchercontroller/expirevoucher:
     post:
       responses:
         '200':
+          description: OK
           content:
-            application/json: {}
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
     description: expire a voucher
 openapi: 3.0.0
 components:
@@ -255,12 +390,8 @@ components:
                 properties:
                   enabled:
                     type: boolean
-                    default: '1'
                   zoneid:
                     type: integer
-                    minimumvalue: '0'
-                    maximumvalue: '19'
-                    validationmessage: Maximum number of zones reached
                   interfaces:
                     type: array
                     items:
@@ -311,7 +442,6 @@ components:
                           properties: {}
                   alwayssendaccountingreqs:
                     type: boolean
-                    default: '0'
                   authenforcegroup:
                     type: array
                     items:
@@ -319,21 +449,10 @@ components:
                       properties: {}
                   idletimeout:
                     type: integer
-                    default: '0'
-                    minimumvalue: '0'
-                    maximumvalue: '10080'
-                    validationmessage: Idle timeout, in minutes, must be between 0
-                      (no timeout) and 10080 (a week)
                   hardtimeout:
                     type: integer
-                    default: '0'
-                    minimumvalue: '0'
-                    maximumvalue: '10080'
-                    validationmessage: Hard timeout, in minutes, must be between 0
-                      (no timeout) and 10080 (a week)
                   concurrentlogins:
                     type: boolean
-                    default: '1'
                   certificate:
                     type: array
                     items:
@@ -344,20 +463,12 @@ components:
                           properties: {}
                   servername:
                     type: string
-                    mask: /^([0-9a-zA-Z.,_\-]){0,1024}$/u
-                    validationmessage: Please enter a valid servername, ip address
-                      or leave this option blank
                   allowedaddresses:
                     type: string
-                    fieldseparator: ','
-                    aslist: Y
-                    wildcardenabled: N
                   allowedmacaddresses:
                     type: string
-                    aslist: Y
                   extendedpreauthdata:
                     type: boolean
-                    default: '0'
                   template:
                     type: array
                     items:
@@ -383,15 +494,6 @@ components:
                           properties: {}
                   description:
                     type: string
-                required:
-                - enabled
-                - zoneid
-                - alwayssendaccountingreqs
-                - idletimeout
-                - hardtimeout
-                - concurrentlogins
-                - extendedpreauthdata
-                - description
         templates:
           type: object
           properties:
@@ -402,20 +504,7 @@ components:
                 properties:
                   fileid:
                     type: string
-                    mask: /[0-9a-zA-Z\-]{1,255}/u
-                    validationmessage: Fileid should be an internally generated unique
-                      number
                   name:
                     type: string
-                    mask: /^([\t\n\v\f\r 0-9a-zA-Z.,_\x{00A0}-\x{FFFF}]){1,255}$/u
-                    validationmessage: Template name should be a string between 1
-                      and 255 characters
                   content:
                     type: string
-                    mask: /[0-9a-zA-Z\+\=\/]{20,}/u
-                    validationmessage: File content should be in (base64 encoded)
-                      zip format
-                required:
-                - fileid
-                - name
-                - content

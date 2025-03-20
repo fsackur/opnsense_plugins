@@ -44,75 +44,6 @@
         "is_abstract": true,
         "doc": "/**\n * Class ApiMutableModelControllerBase, inherit this class to implement\n * an API that exposes a model with get and set actions.\n * You need to implement a method to create new blank model\n * objecs (newModelObject) as well as a method to return\n * the name of the model.\n * @package OPNsense\\Base\n */"
     },
-    "OPNsense\\Auth\\Api\\GroupController": {
-        "name": "OPNsense\\Auth\\Api\\GroupController",
-        "parent": "OPNsense\\Base\\ApiMutableModelControllerBase",
-        "methods": [
-            {
-                "name": "get",
-                "method": "GET",
-                "parameters": [],
-                "doc": "/**\n     * Retrieve model settings\n     * @return array settings\n     * @throws \\ReflectionException when not bound to a valid model\n     */"
-            },
-            {
-                "name": "set",
-                "method": "POST",
-                "parameters": [],
-                "doc": "/**\n     * Update model settings\n     * @return array status / validation errors\n     * @throws \\OPNsense\\Base\\ValidationException on validation issues\n     * @throws \\ReflectionException when binding to the model class fails\n     * @throws UserException when denied write access\n     */"
-            },
-            {
-                "name": "search",
-                "method": "*",
-                "parameters": [],
-                "doc": false
-            },
-            {
-                "name": "get",
-                "method": "GET",
-                "parameters": [
-                    {
-                        "name": "uuid",
-                        "has_default": true,
-                        "default": 42
-                    }
-                ],
-                "doc": false
-            },
-            {
-                "name": "add",
-                "method": "POST",
-                "parameters": [],
-                "doc": false
-            },
-            {
-                "name": "set",
-                "method": "POST",
-                "parameters": [
-                    {
-                        "name": "uuid",
-                        "has_default": true,
-                        "default": null
-                    }
-                ],
-                "doc": false
-            },
-            {
-                "name": "del",
-                "method": "POST",
-                "parameters": [
-                    {
-                        "name": "uuid",
-                        "has_default": false,
-                        "default": null
-                    }
-                ],
-                "doc": false
-            }
-        ],
-        "model": "OPNsense\\Auth\\Group",
-        "is_abstract": false,
-        "doc": "/**\n * Class GroupController\n * @package OPNsense\\Auth\\Api\n */"
-    },
     "OPNsense\\Auth\\Api\\PrivController": {
         "name": "OPNsense\\Auth\\Api\\PrivController",
         "parent": "OPNsense\\Base\\ApiMutableModelControllerBase",
@@ -280,6 +211,75 @@
         "model": "OPNsense\\Auth\\User",
         "is_abstract": false,
         "doc": "/**\n * Class UserController\n * @package OPNsense\\Auth\\Api\n */"
+    },
+    "OPNsense\\Auth\\Api\\GroupController": {
+        "name": "OPNsense\\Auth\\Api\\GroupController",
+        "parent": "OPNsense\\Base\\ApiMutableModelControllerBase",
+        "methods": [
+            {
+                "name": "get",
+                "method": "GET",
+                "parameters": [],
+                "doc": "/**\n     * Retrieve model settings\n     * @return array settings\n     * @throws \\ReflectionException when not bound to a valid model\n     */"
+            },
+            {
+                "name": "set",
+                "method": "POST",
+                "parameters": [],
+                "doc": "/**\n     * Update model settings\n     * @return array status / validation errors\n     * @throws \\OPNsense\\Base\\ValidationException on validation issues\n     * @throws \\ReflectionException when binding to the model class fails\n     * @throws UserException when denied write access\n     */"
+            },
+            {
+                "name": "search",
+                "method": "*",
+                "parameters": [],
+                "doc": false
+            },
+            {
+                "name": "get",
+                "method": "GET",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "has_default": true,
+                        "default": null
+                    }
+                ],
+                "doc": false
+            },
+            {
+                "name": "add",
+                "method": "POST",
+                "parameters": [],
+                "doc": false
+            },
+            {
+                "name": "set",
+                "method": "POST",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "has_default": true,
+                        "default": null
+                    }
+                ],
+                "doc": false
+            },
+            {
+                "name": "del",
+                "method": "POST",
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "has_default": false,
+                        "default": null
+                    }
+                ],
+                "doc": false
+            }
+        ],
+        "model": "OPNsense\\Auth\\Group",
+        "is_abstract": false,
+        "doc": "/**\n * Class GroupController\n * @package OPNsense\\Auth\\Api\n */"
     },
     "OPNsense\\CaptivePortal\\Api\\AccessController": {
         "name": "OPNsense\\CaptivePortal\\Api\\AccessController",
@@ -522,7 +522,7 @@
                 "doc": "/**\n     * search captive portal zones\n     * @return array\n     */"
             }
         ],
-        "model": "\\OPNsense\\CaptivePortal\\CaptivePortal",
+        "model": "OPNsense\\CaptivePortal\\CaptivePortal",
         "is_abstract": false,
         "doc": "/**\n * Class SettingsController Handles settings related API actions for Captive Portal\n * @package OPNsense\\TrafficShaper\n */"
     },
@@ -1498,7 +1498,7 @@
                 "doc": "/**\n     * search cron jobs\n     * @return array search results\n     * @throws \\ReflectionException\n     */"
             }
         ],
-        "model": "\\OPNsense\\Cron\\Cron",
+        "model": "OPNsense\\Cron\\Cron",
         "is_abstract": false,
         "doc": "/**\n * Class SettingsController Handles settings related API actions for the Cron\n * @package OPNsense\\Cron\n */"
     },
@@ -1824,7 +1824,7 @@
                 "doc": false
             }
         ],
-        "model": "\\OPNsense\\DHCRelay\\DHCRelay",
+        "model": "OPNsense\\DHCRelay\\DHCRelay",
         "is_abstract": false,
         "doc": false
     },
@@ -3203,7 +3203,7 @@
                 "doc": false
             }
         ],
-        "model": "\\OPNsense\\Dnsmasq\\Dnsmasq",
+        "model": "OPNsense\\Dnsmasq\\Dnsmasq",
         "is_abstract": false,
         "doc": false
     },
@@ -4662,7 +4662,7 @@
                 "doc": "/**\n     * return the number of custom defined policy rules\n     */"
             }
         ],
-        "model": "\\OPNsense\\IDS\\IDS",
+        "model": "OPNsense\\IDS\\IDS",
         "is_abstract": false,
         "doc": "/**\n * Class SettingsController Handles settings related API actions for the IDS module\n * @package OPNsense\\IDS\n */"
     },
@@ -7388,7 +7388,7 @@
                 "doc": "/**\n     * reconfigure routes\n     * @return array reconfigure status\n     * @throws \\Exception when unable to execute configd command\n     */"
             }
         ],
-        "model": "\\OPNsense\\Routes\\Route",
+        "model": "OPNsense\\Routes\\Route",
         "is_abstract": false,
         "doc": "/**\n * @package OPNsense\\Routes\n */"
     },
@@ -7480,7 +7480,7 @@
                 "doc": false
             }
         ],
-        "model": "\\OPNsense\\Routing\\Gateways",
+        "model": "OPNsense\\Routing\\Gateways",
         "is_abstract": false,
         "doc": false
     },
@@ -7617,7 +7617,7 @@
                 "doc": "/**\n     * Toggle destination defined by uuid (enable/disable)\n     * @param $uuid user defined rule internal id\n     * @param $enabled desired state enabled(1)/disabled(1), leave empty for toggle\n     * @return array save result\n     * @throws \\OPNsense\\Base\\ValidationException when field validations fail\n     * @throws \\ReflectionException when not bound to model\n     */"
             }
         ],
-        "model": "\\OPNsense\\Syslog\\Syslog",
+        "model": "OPNsense\\Syslog\\Syslog",
         "is_abstract": false,
         "doc": "/**\n * Class SettingsController Handles settings related API actions for the Syslog module\n * @package OPNsense\\IDS\n */"
     },
@@ -7860,7 +7860,7 @@
                 "doc": "/**\n     * Toggle rule defined by uuid (enable/disable)\n     * @param $uuid user defined rule internal id\n     * @param $enabled desired state enabled(1)/disabled(1), leave empty for toggle\n     * @return array save result\n     * @throws \\OPNsense\\Base\\ValidationException when field validations fail\n     * @throws \\ReflectionException when not bound to model\n     */"
             }
         ],
-        "model": "\\OPNsense\\TrafficShaper\\TrafficShaper",
+        "model": "OPNsense\\TrafficShaper\\TrafficShaper",
         "is_abstract": false,
         "doc": "/**\n * Class SettingsController Handles settings related API actions for the Traffic Shaper\n * @package OPNsense\\TrafficShaper\n */"
     },
@@ -8645,7 +8645,7 @@
                 "doc": false
             }
         ],
-        "model": "\\OPNsense\\Unbound\\Unbound",
+        "model": "OPNsense\\Unbound\\Unbound",
         "is_abstract": false,
         "doc": false
     },
@@ -8762,7 +8762,7 @@
                 "doc": false
             }
         ],
-        "model": "\\OPNsense\\Wireguard\\Client",
+        "model": "OPNsense\\Wireguard\\Client",
         "is_abstract": false,
         "doc": false
     },
@@ -8783,7 +8783,7 @@
                 "doc": "/**\n     * Update model settings\n     * @return array status / validation errors\n     * @throws \\OPNsense\\Base\\ValidationException on validation issues\n     * @throws \\ReflectionException when binding to the model class fails\n     * @throws UserException when denied write access\n     */"
             }
         ],
-        "model": "\\OPNsense\\Wireguard\\General",
+        "model": "OPNsense\\Wireguard\\General",
         "is_abstract": false,
         "doc": false
     },
@@ -8876,7 +8876,7 @@
                 "doc": false
             }
         ],
-        "model": "\\OPNsense\\Wireguard\\Server",
+        "model": "OPNsense\\Wireguard\\Server",
         "is_abstract": false,
         "doc": false
     },

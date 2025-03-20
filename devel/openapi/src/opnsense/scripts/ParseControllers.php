@@ -251,6 +251,10 @@ class Controller {
                 $model = $parent->model;
             }
         }
+
+        if ($model && $model[0] == "\\") {
+            $model = substr($model, 1);
+        }
         $this->model = $model;
 
         $this->doc = $rc->getDocComment();
