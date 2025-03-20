@@ -1,7 +1,6 @@
 {
     "OPNsense\\Base\\FieldTypes\\BaseField": {
         "name": "OPNsense\\Base\\FieldTypes\\BaseField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": null,
         "is_container": true,
         "properties": [
@@ -14,7 +13,6 @@
     },
     "OPNsense\\Auth\\FieldTypes\\ApiKeyField": {
         "name": "OPNsense\\Auth\\FieldTypes\\ApiKeyField",
-        "namespace": "OPNsense\\Auth\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -27,7 +25,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\TextField": {
         "name": "OPNsense\\Base\\FieldTypes\\TextField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -41,7 +38,6 @@
     },
     "OPNsense\\Auth\\FieldTypes\\ExpiresField": {
         "name": "OPNsense\\Auth\\FieldTypes\\ExpiresField",
-        "namespace": "OPNsense\\Auth\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\TextField",
         "is_container": false,
         "properties": [
@@ -55,7 +51,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\IntegerField": {
         "name": "OPNsense\\Base\\FieldTypes\\IntegerField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -70,7 +65,6 @@
     },
     "OPNsense\\Auth\\FieldTypes\\GidField": {
         "name": "OPNsense\\Auth\\FieldTypes\\GidField",
-        "namespace": "OPNsense\\Auth\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\IntegerField",
         "is_container": false,
         "properties": [
@@ -85,7 +79,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\BaseListField": {
         "name": "OPNsense\\Base\\FieldTypes\\BaseListField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -100,7 +93,6 @@
     },
     "OPNsense\\Auth\\FieldTypes\\GroupMembershipField": {
         "name": "OPNsense\\Auth\\FieldTypes\\GroupMembershipField",
-        "namespace": "OPNsense\\Auth\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -115,7 +107,6 @@
     },
     "OPNsense\\Auth\\FieldTypes\\MemberField": {
         "name": "OPNsense\\Auth\\FieldTypes\\MemberField",
-        "namespace": "OPNsense\\Auth\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -130,7 +121,6 @@
     },
     "OPNsense\\Auth\\FieldTypes\\PrivField": {
         "name": "OPNsense\\Auth\\FieldTypes\\PrivField",
-        "namespace": "OPNsense\\Auth\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -145,7 +135,6 @@
     },
     "OPNsense\\Auth\\FieldTypes\\StoreB64Field": {
         "name": "OPNsense\\Auth\\FieldTypes\\StoreB64Field",
-        "namespace": "OPNsense\\Auth\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\TextField",
         "is_container": false,
         "properties": [
@@ -159,7 +148,6 @@
     },
     "OPNsense\\Auth\\FieldTypes\\UidField": {
         "name": "OPNsense\\Auth\\FieldTypes\\UidField",
-        "namespace": "OPNsense\\Auth\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\IntegerField",
         "is_container": false,
         "properties": [
@@ -174,7 +162,6 @@
     },
     "OPNsense\\Auth\\FieldTypes\\UsernameField": {
         "name": "OPNsense\\Auth\\FieldTypes\\UsernameField",
-        "namespace": "OPNsense\\Auth\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -187,7 +174,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\ArrayField": {
         "name": "OPNsense\\Base\\FieldTypes\\ArrayField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": true,
         "properties": [
@@ -200,7 +186,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\AuthGroupField": {
         "name": "OPNsense\\Base\\FieldTypes\\AuthGroupField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -215,7 +200,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\AuthenticationServerField": {
         "name": "OPNsense\\Base\\FieldTypes\\AuthenticationServerField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -231,7 +215,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\AutoNumberField": {
         "name": "OPNsense\\Base\\FieldTypes\\AutoNumberField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -246,7 +229,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\Base64Field": {
         "name": "OPNsense\\Base\\FieldTypes\\Base64Field",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\TextField",
         "is_container": false,
         "properties": [
@@ -260,7 +242,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\BooleanField": {
         "name": "OPNsense\\Base\\FieldTypes\\BooleanField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -273,7 +254,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\CSVListField": {
         "name": "OPNsense\\Base\\FieldTypes\\CSVListField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -289,7 +269,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\CertificateField": {
         "name": "OPNsense\\Base\\FieldTypes\\CertificateField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -305,7 +284,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\ConfigdActionsField": {
         "name": "OPNsense\\Base\\FieldTypes\\ConfigdActionsField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -321,7 +299,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\ContainerField": {
         "name": "OPNsense\\Base\\FieldTypes\\ContainerField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": true,
         "properties": [
@@ -334,7 +311,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\CountryField": {
         "name": "OPNsense\\Base\\FieldTypes\\CountryField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -350,7 +326,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\DescriptionField": {
         "name": "OPNsense\\Base\\FieldTypes\\DescriptionField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\TextField",
         "is_container": false,
         "properties": [
@@ -364,7 +339,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\EmailField": {
         "name": "OPNsense\\Base\\FieldTypes\\EmailField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -377,7 +351,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\HostnameField": {
         "name": "OPNsense\\Base\\FieldTypes\\HostnameField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -397,7 +370,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\IPPortField": {
         "name": "OPNsense\\Base\\FieldTypes\\IPPortField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -413,7 +385,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\InterfaceField": {
         "name": "OPNsense\\Base\\FieldTypes\\InterfaceField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -431,7 +402,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\JsonKeyValueStoreField": {
         "name": "OPNsense\\Base\\FieldTypes\\JsonKeyValueStoreField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -452,7 +422,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\LegacyLinkField": {
         "name": "OPNsense\\Base\\FieldTypes\\LegacyLinkField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -466,7 +435,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\MacAddressField": {
         "name": "OPNsense\\Base\\FieldTypes\\MacAddressField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -480,7 +448,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\ModelRelationField": {
         "name": "OPNsense\\Base\\FieldTypes\\ModelRelationField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -497,7 +464,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\NetworkAliasField": {
         "name": "OPNsense\\Base\\FieldTypes\\NetworkAliasField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -512,7 +478,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\NetworkField": {
         "name": "OPNsense\\Base\\FieldTypes\\NetworkField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -532,7 +497,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\NumericField": {
         "name": "OPNsense\\Base\\FieldTypes\\NumericField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -547,7 +511,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\OptionField": {
         "name": "OPNsense\\Base\\FieldTypes\\OptionField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -563,7 +526,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\PortField": {
         "name": "OPNsense\\Base\\FieldTypes\\PortField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -581,7 +543,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\ProtocolField": {
         "name": "OPNsense\\Base\\FieldTypes\\ProtocolField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -597,7 +558,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\UniqueIdField": {
         "name": "OPNsense\\Base\\FieldTypes\\UniqueIdField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -610,7 +570,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\UpdateOnlyTextField": {
         "name": "OPNsense\\Base\\FieldTypes\\UpdateOnlyTextField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\TextField",
         "is_container": false,
         "properties": [
@@ -624,7 +583,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\UrlField": {
         "name": "OPNsense\\Base\\FieldTypes\\UrlField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -637,7 +595,6 @@
     },
     "OPNsense\\Base\\FieldTypes\\VirtualIPField": {
         "name": "OPNsense\\Base\\FieldTypes\\VirtualIPField",
-        "namespace": "OPNsense\\Base\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -654,7 +611,6 @@
     },
     "OPNsense\\Core\\FieldTypes\\TunableField": {
         "name": "OPNsense\\Core\\FieldTypes\\TunableField",
-        "namespace": "OPNsense\\Core\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -667,7 +623,6 @@
     },
     "OPNsense\\Diagnostics\\FieldTypes\\HostField": {
         "name": "OPNsense\\Diagnostics\\FieldTypes\\HostField",
-        "namespace": "OPNsense\\Diagnostics\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -680,7 +635,6 @@
     },
     "OPNsense\\Diagnostics\\FieldTypes\\InterfaceField": {
         "name": "OPNsense\\Diagnostics\\FieldTypes\\InterfaceField",
-        "namespace": "OPNsense\\Diagnostics\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -695,7 +649,6 @@
     },
     "OPNsense\\Dnsmasq\\FieldTypes\\AliasesField": {
         "name": "OPNsense\\Dnsmasq\\FieldTypes\\AliasesField",
-        "namespace": "OPNsense\\Dnsmasq\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\HostnameField",
         "is_container": false,
         "properties": [
@@ -715,7 +668,6 @@
     },
     "OPNsense\\Dnsmasq\\FieldTypes\\DomainIPField": {
         "name": "OPNsense\\Dnsmasq\\FieldTypes\\DomainIPField",
-        "namespace": "OPNsense\\Dnsmasq\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\NetworkField",
         "is_container": false,
         "properties": [
@@ -735,7 +687,6 @@
     },
     "OPNsense\\Dnsmasq\\FieldTypes\\RangeAddressField": {
         "name": "OPNsense\\Dnsmasq\\FieldTypes\\RangeAddressField",
-        "namespace": "OPNsense\\Dnsmasq\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\NetworkField",
         "is_container": false,
         "properties": [
@@ -755,7 +706,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\AliasContentField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\AliasContentField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -768,7 +718,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\AliasField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\AliasField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -781,7 +730,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\AliasNameField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\AliasNameField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -794,7 +742,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\FilterRuleField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\FilterRuleField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -807,7 +754,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\GroupField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\GroupField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -820,7 +766,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\GroupNameField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\GroupNameField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -833,7 +778,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\InterfaceField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\InterfaceField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -848,7 +792,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\ScheduleField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\ScheduleField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -863,7 +806,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\SourceNatRuleField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\SourceNatRuleField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -876,7 +818,6 @@
     },
     "OPNsense\\Firewall\\FieldTypes\\TosField": {
         "name": "OPNsense\\Firewall\\FieldTypes\\TosField",
-        "namespace": "OPNsense\\Firewall\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -891,7 +832,6 @@
     },
     "OPNsense\\IDS\\FieldTypes\\PolicyContentField": {
         "name": "OPNsense\\IDS\\FieldTypes\\PolicyContentField",
-        "namespace": "OPNsense\\IDS\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -906,7 +846,6 @@
     },
     "OPNsense\\IDS\\FieldTypes\\PolicyRulesField": {
         "name": "OPNsense\\IDS\\FieldTypes\\PolicyRulesField",
-        "namespace": "OPNsense\\IDS\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -919,7 +858,6 @@
     },
     "OPNsense\\IPsec\\FieldTypes\\CharonLogLevelField": {
         "name": "OPNsense\\IPsec\\FieldTypes\\CharonLogLevelField",
-        "namespace": "OPNsense\\IPsec\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -934,7 +872,6 @@
     },
     "OPNsense\\IPsec\\FieldTypes\\ConnnectionField": {
         "name": "OPNsense\\IPsec\\FieldTypes\\ConnnectionField",
-        "namespace": "OPNsense\\IPsec\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -947,7 +884,6 @@
     },
     "OPNsense\\IPsec\\FieldTypes\\IKEAddressField": {
         "name": "OPNsense\\IPsec\\FieldTypes\\IKEAddressField",
-        "namespace": "OPNsense\\IPsec\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -960,7 +896,6 @@
     },
     "OPNsense\\IPsec\\FieldTypes\\IPsecProposalField": {
         "name": "OPNsense\\IPsec\\FieldTypes\\IPsecProposalField",
-        "namespace": "OPNsense\\IPsec\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -976,7 +911,6 @@
     },
     "OPNsense\\IPsec\\FieldTypes\\PoolsField": {
         "name": "OPNsense\\IPsec\\FieldTypes\\PoolsField",
-        "namespace": "OPNsense\\IPsec\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -991,7 +925,6 @@
     },
     "OPNsense\\IPsec\\FieldTypes\\SPDField": {
         "name": "OPNsense\\IPsec\\FieldTypes\\SPDField",
-        "namespace": "OPNsense\\IPsec\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -1004,7 +937,6 @@
     },
     "OPNsense\\IPsec\\FieldTypes\\VTIField": {
         "name": "OPNsense\\IPsec\\FieldTypes\\VTIField",
-        "namespace": "OPNsense\\IPsec\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -1017,7 +949,6 @@
     },
     "OPNsense\\Interfaces\\FieldTypes\\LaggInterfaceField": {
         "name": "OPNsense\\Interfaces\\FieldTypes\\LaggInterfaceField",
-        "namespace": "OPNsense\\Interfaces\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -1032,7 +963,6 @@
     },
     "OPNsense\\Interfaces\\FieldTypes\\LinkAddressField": {
         "name": "OPNsense\\Interfaces\\FieldTypes\\LinkAddressField",
-        "namespace": "OPNsense\\Interfaces\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -1045,7 +975,6 @@
     },
     "OPNsense\\Interfaces\\FieldTypes\\NeighborField": {
         "name": "OPNsense\\Interfaces\\FieldTypes\\NeighborField",
-        "namespace": "OPNsense\\Interfaces\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -1058,7 +987,6 @@
     },
     "OPNsense\\Interfaces\\FieldTypes\\VipField": {
         "name": "OPNsense\\Interfaces\\FieldTypes\\VipField",
-        "namespace": "OPNsense\\Interfaces\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -1071,7 +999,6 @@
     },
     "OPNsense\\Interfaces\\FieldTypes\\VipInterfaceField": {
         "name": "OPNsense\\Interfaces\\FieldTypes\\VipInterfaceField",
-        "namespace": "OPNsense\\Interfaces\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -1086,7 +1013,6 @@
     },
     "OPNsense\\Interfaces\\FieldTypes\\VipNetworkField": {
         "name": "OPNsense\\Interfaces\\FieldTypes\\VipNetworkField",
-        "namespace": "OPNsense\\Interfaces\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\TextField",
         "is_container": false,
         "properties": [
@@ -1100,7 +1026,6 @@
     },
     "OPNsense\\Interfaces\\FieldTypes\\VlanInterfaceField": {
         "name": "OPNsense\\Interfaces\\FieldTypes\\VlanInterfaceField",
-        "namespace": "OPNsense\\Interfaces\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -1115,7 +1040,6 @@
     },
     "OPNsense\\Kea\\FieldTypes\\KeaPoolsField": {
         "name": "OPNsense\\Kea\\FieldTypes\\KeaPoolsField",
-        "namespace": "OPNsense\\Kea\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -1128,7 +1052,6 @@
     },
     "OPNsense\\OpenVPN\\FieldTypes\\InstanceField": {
         "name": "OPNsense\\OpenVPN\\FieldTypes\\InstanceField",
-        "namespace": "OPNsense\\OpenVPN\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -1141,7 +1064,6 @@
     },
     "OPNsense\\OpenVPN\\FieldTypes\\OpenVPNServerField": {
         "name": "OPNsense\\OpenVPN\\FieldTypes\\OpenVPNServerField",
-        "namespace": "OPNsense\\OpenVPN\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -1156,7 +1078,6 @@
     },
     "OPNsense\\OpenVPN\\FieldTypes\\RemoteHostField": {
         "name": "OPNsense\\OpenVPN\\FieldTypes\\RemoteHostField",
-        "namespace": "OPNsense\\OpenVPN\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseField",
         "is_container": false,
         "properties": [
@@ -1169,7 +1090,6 @@
     },
     "OPNsense\\OpenVPN\\FieldTypes\\VPNIdField": {
         "name": "OPNsense\\OpenVPN\\FieldTypes\\VPNIdField",
-        "namespace": "OPNsense\\OpenVPN\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\IntegerField",
         "is_container": false,
         "properties": [
@@ -1184,7 +1104,6 @@
     },
     "OPNsense\\Routing\\FieldTypes\\GatewayField": {
         "name": "OPNsense\\Routing\\FieldTypes\\GatewayField",
-        "namespace": "OPNsense\\Routing\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -1197,7 +1116,6 @@
     },
     "OPNsense\\Trust\\FieldTypes\\CAsField": {
         "name": "OPNsense\\Trust\\FieldTypes\\CAsField",
-        "namespace": "OPNsense\\Trust\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -1210,7 +1128,6 @@
     },
     "OPNsense\\Trust\\FieldTypes\\CertificatesField": {
         "name": "OPNsense\\Trust\\FieldTypes\\CertificatesField",
-        "namespace": "OPNsense\\Trust\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -1223,7 +1140,6 @@
     },
     "OPNsense\\Unbound\\FieldTypes\\UnboundInterfaceField": {
         "name": "OPNsense\\Unbound\\FieldTypes\\UnboundInterfaceField",
-        "namespace": "OPNsense\\Unbound\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\BaseListField",
         "is_container": false,
         "properties": [
@@ -1238,7 +1154,6 @@
     },
     "OPNsense\\Wireguard\\FieldTypes\\ClientField": {
         "name": "OPNsense\\Wireguard\\FieldTypes\\ClientField",
-        "namespace": "OPNsense\\Wireguard\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [
@@ -1251,7 +1166,6 @@
     },
     "OPNsense\\Wireguard\\FieldTypes\\ServerField": {
         "name": "OPNsense\\Wireguard\\FieldTypes\\ServerField",
-        "namespace": "OPNsense\\Wireguard\\FieldTypes",
         "parent": "OPNsense\\Base\\FieldTypes\\ArrayField",
         "is_container": true,
         "properties": [

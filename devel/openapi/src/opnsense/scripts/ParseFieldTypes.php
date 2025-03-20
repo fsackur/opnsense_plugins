@@ -39,7 +39,6 @@ class Field {
     ];
 
     public $name;
-    public $namespace;
     public $parent;
     public $is_container;
     public $properties;
@@ -47,7 +46,6 @@ class Field {
     public function __construct(ReflectionClass $rc)
     {
         $this->name = $rc->getName();
-        $this->namespace = $rc->getNamespaceName();
 
         $parent = null;
         $parent_name = null;
