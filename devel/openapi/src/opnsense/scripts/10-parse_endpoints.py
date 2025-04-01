@@ -17,7 +17,7 @@ HttpMethod: TypeAlias = Literal["GET"] | Literal["POST"]
 
 #region DTOs from ParseControllers.php
 # This is, approximately, raw php Reflection.
-# TypedDict does not validate; this will not throw.
+# TypedDict does not validate; this will not throw. It's only here for linting.
 class PhpParameter(TypedDict):
     name: str
     has_default: bool
@@ -39,11 +39,12 @@ class PhpController(TypedDict):
 
 
 #region intermediate DTOs
-# These do validation and throw nice errors. Otherwise we can delete them.
+# These do validation and throw nice errors. The errors are why they exist.
 class Parameter(BaseModel):
     name: str
     has_default: bool
     default: Any
+    # No from_php method needed, already matches the PHP DTO.
 
 class Method(BaseModel):
     description: str
@@ -53,8 +54,7 @@ class Method(BaseModel):
 
     @classmethod
     def from_php(cls, method: PhpMethod) -> Self:
-        # not shown: pick description out of PHP doc comment.
-        # I like to leave the pydantic init alone
+        # omitted: pick description out of PHP doc comment.
         return cls(**method)
 
 class Controller(BaseModel):
@@ -66,8 +66,7 @@ class Controller(BaseModel):
 
     @classmethod
     def from_php(cls, ctrl: PhpController) -> Self:
-        # not shown: replace PHP backslashes
-        # I like to leave the pydantic init alone
+        # omitted: replace PHP backslashes
         return cls(**ctrl)
 
 #endregion intermediate DTOs
@@ -109,8 +108,7 @@ def get_controllers(json_path: str = "./controllers.json") -> List[Controller]:
         php_incantation = f"/usr/bin/php {php_script_path} -o='{json_path}'"
 
         # SMELL SMELL SMELL
-        # On my box, php errors on fopen, but only when run without shell=True. Identical php_info().
-        # I suspect I'm missing something about BSD or about PHP...
+        # Want to avoid using shell, but Popen(["php", php_script_path, *args]) makes PHP fail on fopen.
         subprocess.run(php_incantation, shell=True)
 
     controllers = []
@@ -128,7 +126,7 @@ def get_endpoints() -> List[Endpoint]:
         if controller.is_abstract:
             continue
 
-        # omitted: regex split helper
+        # omitted: regex split helper. E.g. ("Auth", "User") or ("Firewall", "SourceNat")
         module, controller_name = explode_php_name(controller.name)
 
         for method in controller.methods:
