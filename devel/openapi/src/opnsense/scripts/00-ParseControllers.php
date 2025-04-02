@@ -5,8 +5,6 @@
  * I do the bare minimum in PHP because a) I don't know PHP and b) type system
  * is not great.
  *
- * Called from `parse_endpoints.py`.
- *
  * USAGE:
  *      php ParseControllers.php [ARGS]
  *
@@ -14,9 +12,8 @@
  *      -o, --output-file      path to write a JSON file
  */
 
-// omitted: import/use/namespace ceremony
 
-class Parameter {
+ class Parameter {
     public $name;
     public $has_default;
     public $default;
@@ -31,23 +28,7 @@ class Method {
     public $parameters = [];
     public $doc;
 
-    public function __construct(ReflectionMethod $rmethod)
-    {
-        $http_method = "GET";
-        // omitted: detecting POST methods using algorithm from existing script
-
-        $params = [];
-        $rparams = $rmethod->getParameters();
-        foreach ($rparams as $rparam) {
-            $params[] = new Parameter($rparam);
-        }
-
-        $this->name = preg_replace("/Action\$/", "", $rmethod->name);
-        $this->method = $http_method;
-        $this->parameters = $params;
-        $this->doc = $rmethod->getDocComment();
-        // omitted: handle @inheritdoc using ControllerRegistry
-    }
+    public function __construct(ReflectionMethod $rmethod) { /** omitted */ }
 }
 
 
@@ -109,15 +90,9 @@ class ControllerRegistry {
         self::$registry[$name] = $controller;
     }
 
-    public static function get(string $name) {
-        if (array_key_exists($name, ControllerRegistry::$registry)) {
-            return ControllerRegistry::$registry[$name];
-        }
-    }
+    public static function get(string $name) { /** omitted */}
 
-    public static function dump() {
-        return ControllerRegistry::$registry;
-    }
+    public static function dump() { /** omitted */ }
 }
 
 
@@ -142,13 +117,11 @@ function register_controllers(array $class_names)
  */
 function export_controllers(string $base_path, ?string $output_file = null)
 {
-    $json_flags = JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE;
-
     $class_names = find_controller_classes($base_path);
     register_controllers($class_names);
 
     $controllers = ControllerRegistry::dump();
-    $json = json_encode($controllers, $json_flags) . "\n";
+    $json = json_encode($controllers) . "\n";
 
     if ($output_file) {
         // fails here when called from python without shell=True. See parse_endpoints.py

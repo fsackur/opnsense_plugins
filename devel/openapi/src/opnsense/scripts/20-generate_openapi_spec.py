@@ -17,23 +17,13 @@ from parse_endpoints import Endpoint, get_endpoints
 def get_operation(endpoint: Endpoint) -> Dict[str, Any]:
     method = endpoint.method.lower()
 
-    if endpoint.model and method == "get":
-        # TODO: check whether post responses return the model
-        # TODO: explore the "search" routes, which accept both post and get
+    if endpoint.model:
         schema = {
             "$ref": endpoint.model,  # e.g. "opnsense.captiveportal.captiveportal"
             # Will make more sense later. Left in to show the spec API
         }
     else:
-        # I don't fully understand non-model responses yet. Possibly they come from configd?
-        # I'm willing to compromise on correctness in this case.
-        # The request body is more important than the response.
-        schema = {
-            "type": "object",
-            "properties": {
-                "status": {"type": "string"}
-            }
-        }
+        ... # basic status property declaration
 
     responses = {
         "200": {

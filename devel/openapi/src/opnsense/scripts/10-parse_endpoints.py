@@ -2,8 +2,6 @@
 
 """
 Build a dataclass for each API endpoint. These become "operations" in OpenApi spec.
-
-Called by `generate_openapi_spec.py`.
 """
 
 import json
@@ -44,7 +42,6 @@ class Parameter(BaseModel):
     name: str
     has_default: bool
     default: Any
-    # No from_php method needed, already matches the PHP DTO.
 
 class Method(BaseModel):
     description: str
@@ -68,7 +65,6 @@ class Controller(BaseModel):
     def from_php(cls, ctrl: PhpController) -> Self:
         # omitted: replace PHP backslashes
         return cls(**ctrl)
-
 #endregion intermediate DTOs
 
 
@@ -78,9 +74,6 @@ class Endpoint(BaseModel):
 
     Most important part of OpenApi spec. If we skip models, we can still get a spec
     with just this data (but good luck with post requests!)
-
-    OpenApi spec defines "response" (and, optionally, "request") for models.
-    Here, "model" is a placeholder. End goal is to stick models into "components".
     """
 
     description: str
@@ -88,11 +81,6 @@ class Endpoint(BaseModel):
     method: HttpMethod
     parameters: List[Parameter]
     model: str | None
-
-    @property
-    def operation_id(self) -> str:
-        """Can be any unique string (can be shared between http methods)"""
-        return self.path.replace("/", "_")
 
 
 def get_controllers(json_path: str = "./controllers.json") -> List[Controller]:
@@ -111,10 +99,7 @@ def get_controllers(json_path: str = "./controllers.json") -> List[Controller]:
         # Want to avoid using shell, but Popen(["php", php_script_path, *args]) makes PHP fail on fopen.
         subprocess.run(php_incantation, shell=True)
 
-    controllers = []
-    with open(json_path) as file:
-        ... # iterate and call Controller.from_php()
-
+    # read json; iterate; call Controller.from_php()
     return controllers
 
 
