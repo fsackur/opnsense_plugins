@@ -82,7 +82,7 @@ def get_model_xml_files(base_path: str) -> List[str]:
 
 
 def get_models(
-    base_path: str = "/usr",  # good enough for now
+    base_path: str = "../../../../../..",  # dev hack
     json_path: str = "./models.json"
 ) -> List[Model]:
 
