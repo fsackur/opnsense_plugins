@@ -323,8 +323,45 @@ def validate_spec(spec: APISpec):
         raise Exception(msg).with_traceback(None) from None
 
 
+def test_spec(models: List[Model], endpoints: List[Endpoint]):
+    models_by_name = {m.schema_path: m for m in models}
+    from itertools import groupby
+    endpoints = endpoints.copy()
+    key = lambda ep: ep.model or ""
+    endpoints.sort(key=key)
+
+    failed = False
+    for model_name, eps in groupby(endpoints, key=key):
+        spec = get_spec([], [])
+        model = models_by_name.get(model_name)
+        if model:
+            component = get_model_spec(model)
+            spec.components.schema(model.schema_path, component)
+            try:
+                validate_spec(spec)
+            except Exception as ex:
+                print(component)
+                print(ex)
+                failed = True
+                break
+
+        for endpoint in eps:
+            operation = get_operation(endpoint)
+            spec.path(path=endpoint.path, description=endpoint.description, operations=operation)
+        try:
+            validate_spec(spec)
+        except Exception as ex:
+            print(endpoint)
+            print(ex)
+            failed = True
+            break
+
+    if failed:
+        raise Exception("Failed validation")
+
+
 if __name__ == "__main__":
-    path_filter = "/firewall"
+    path_filter = ""
     # # TODO: argparse. Expecting arg[1] to be, e.g., "/usr/local/opnsense/www/openapi.yml"
     output_file = os.path.realpath("openapi.yml")
 
@@ -337,9 +374,12 @@ if __name__ == "__main__":
     models = get_models()
     models = [m for m in models if m.schema_path in model_names]
 
+    # test_spec(models, endpoints)
     spec = get_spec(models, endpoints)
     validate_spec(spec)
 
     yaml = spec.to_yaml()  # or json
     with open(output_file, "w") as file:
         file.write(yaml)
+
+    # validate_spec(spec)
