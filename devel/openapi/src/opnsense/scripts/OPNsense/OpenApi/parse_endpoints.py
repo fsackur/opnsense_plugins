@@ -8,13 +8,17 @@ Called by `generate_openapi_spec.py`.
 
 import json
 import os
+import pathlib
+import argparse
 import re
 import subprocess
 from typing import Any, Dict, List, Literal, Self, TypeAlias, TypedDict
 from pydantic import BaseModel
 
-from parse_xml_models import get_openapi_schema_path
+from parse_xml_models import get_openapi_schema_path, _DEFAULT_SOURCE_FOLDER
 
+
+_DEFAULT_OUTPUT_FILE = "endpoints.json"
 
 HttpMethod: TypeAlias = Literal["GET"] | Literal["POST"]
 
@@ -170,28 +174,18 @@ class Endpoint(BaseModel):
         return self.path
 
 
-def get_controllers(json_path: str = "./controllers.json") -> List[Controller]:
-    """
-    Call ParseControllers.php. Using intermediate JSON because concerned about PHP polluting stdout.
-    JSON should probably go somewhere in /var..?
-    """
+def get_controllers(source_folder: str) -> List[Controller]:
+    """Call ParseControllers.php"""
 
-    json_path = os.path.realpath(json_path)
+    script_dir = os.path.dirname(__file__)
+    php_script_path = f"{script_dir}/ParseControllers.php"
 
-    if not os.path.isfile(json_path):
-        php_script_path = os.path.realpath("./ParseControllers.php")
-        php_incantation = f"/usr/bin/php {php_script_path} -o='{json_path}'"
+    php_result = subprocess.run(["php", php_script_path, "-s", source_folder], capture_output=True)
+    if php_result.returncode:
+        print(php_result.stdout.decode())
+        raise subprocess.SubprocessError(php_result.stderr.decode())
 
-        # SMELL SMELL SMELL
-        # On my box, php errors on fopen, but only when run without shell=True. Identical php_info().
-        # I suspect I'm missing something about BSD or about PHP...
-        subprocess.run(php_incantation, shell=True)
-
-    with open(json_path) as file:
-        controller_json = file.read()
-
-    php_controllers: List[PhpController] = json.loads(controller_json)
-
+    php_controllers = json.loads(php_result.stdout)
     controllers = []
     for c in php_controllers:
         controllers.append(Controller.from_php(c))
@@ -204,8 +198,7 @@ def get_controller_url_segments(class_name: str):
     return segments[-3], segments[-1].replace("Controller", "")
 
 
-def get_endpoints(json_path: str = "./endpoints.json") -> List[Endpoint]:
-    json_path = os.path.realpath(json_path)
+def get_endpoints(source_folder=_DEFAULT_SOURCE_FOLDER, json_path=_DEFAULT_OUTPUT_FILE) -> List[Endpoint]:
 
     if os.path.isfile(json_path):
         with open(json_path) as file:
@@ -215,7 +208,7 @@ def get_endpoints(json_path: str = "./endpoints.json") -> List[Endpoint]:
         return endpoints
 
     endpoints = []
-    for controller in get_controllers():
+    for controller in get_controllers(source_folder):
         if controller.is_abstract:
             continue
 
@@ -238,6 +231,8 @@ def get_endpoints(json_path: str = "./endpoints.json") -> List[Endpoint]:
                 endpoints.append(endpoint)
 
     endpoint_json = json.dumps([ep.dict() for ep in endpoints])
+
+    pathlib.Path(json_path).parent.mkdir(parents=True, exist_ok=True)
     with open(json_path, "w") as file:
         file.write(endpoint_json)
 
@@ -245,5 +240,18 @@ def get_endpoints(json_path: str = "./endpoints.json") -> List[Endpoint]:
 
 
 if __name__ == "__main__":
-    from pprint import pprint
-    pprint(get_endpoints())
+    parser = argparse.ArgumentParser(description="parse OpenApi endpoints")
+    parser.add_argument("-s", "--source-folder", default=_DEFAULT_SOURCE_FOLDER)
+    parser.add_argument("-o", "--output-file", default=_DEFAULT_OUTPUT_FILE)
+    parser.add_argument("-q", "--quiet", action="store_true")
+    args = parser.parse_args()
+
+    source_folder = os.path.realpath(args.source_folder)
+    output_file = os.path.realpath(args.output_file)
+    quiet = args.quiet
+
+    endpoints = get_endpoints(source_folder=source_folder, json_path=output_file)
+
+    if not quiet:
+        from pprint import pprint
+        pprint(endpoints)
