@@ -1,0 +1,5 @@
+<menu>
+    <Services>
+        <OpenApi url="/ui/openapi"/>
+    </Services>
+</menu>
