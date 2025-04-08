@@ -6,11 +6,17 @@ Find XML model files and parse into intermediate DTOs.
 
 import json
 import os
+import argparse
+import pathlib
 from typing import List
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element as XmlElement
 
 from pydantic import BaseModel
+
+
+_DEFAULT_SOURCE_FOLDER = "/usr/local/opnsense/mvc/app"
+_DEFAULT_OUTPUT_FILE = "xml_models.json"
 
 EXCLUDE_MODEL = "mvc/app/models/OPNsense/iperf/FakeInstance.xml"
 
@@ -31,6 +37,9 @@ class XmlNode(BaseModel):
 # To save passing path recursively, only the root node gets it
 class XmlModel(XmlNode):
     schema_path: str
+
+    def __repr__(self):
+        return f"XmlModel({self.schema_path})"
 #endregion Intermediate DTOs
 
 
@@ -69,10 +78,10 @@ def parse_xml_file(xml_file: str) -> XmlModel:
     return XmlModel(**xml_model.dict(), schema_path=schema_path)
 
 
-def get_model_xml_files(base_path: str) -> List[str]:
+def get_model_xml_files(source_folder: str) -> List[str]:
     """Finds paths of model XML files within mvc/app/models"""
     found = []
-    for root, _, files in os.walk(base_path, topdown=True):
+    for root, _, files in os.walk(source_folder, topdown=True, followlinks=True):
         path_segments = root.split("/")
         if path_segments[-3] != "models":  # seems consistent as of v25.1
             continue
@@ -82,10 +91,9 @@ def get_model_xml_files(base_path: str) -> List[str]:
 
 
 def get_models(
-    base_path: str = "../../../../../..",  # dev hack
-    json_path: str = "./models.json"
+    source_folder: str = _DEFAULT_SOURCE_FOLDER,
+    json_path: str = _DEFAULT_OUTPUT_FILE
 ) -> List[XmlModel]:
-
     if os.path.isfile(json_path):
         with open(json_path) as file:
             model_json = file.read()
@@ -93,7 +101,7 @@ def get_models(
         models = [XmlModel(**m) for m in _models]
         return models
 
-    xml_files = get_model_xml_files(base_path)
+    xml_files = get_model_xml_files(source_folder)
 
     models = []
     for xml_file in xml_files:
@@ -101,6 +109,8 @@ def get_models(
         models.append(model)
 
     model_json = json.dumps([m.dict() for m in models])
+
+    pathlib.Path(json_path).parent.mkdir(parents=True, exist_ok=True)
     with open(json_path, mode="w") as file:
         file.write(model_json)
 
@@ -108,5 +118,21 @@ def get_models(
 
 
 if __name__ == "__main__":
-    from pprint import pprint
-    pprint(get_models())
+    parser = argparse.ArgumentParser(description="parse XML models")
+    parser.add_argument("-s", "--source-folder", default=_DEFAULT_SOURCE_FOLDER)
+    parser.add_argument("-o", "--output-file", default=_DEFAULT_OUTPUT_FILE)
+    parser.add_argument("-q", "--quiet", action="store_true")
+    args = parser.parse_args()
+
+    source_folder = args.source_folder
+    output_file = os.path.realpath(args.output_file)
+    quiet = args.quiet
+
+    if not os.path.isdir(source_folder):
+        raise ValueError(f"{source_folder} is not a directory. Specify a source folder containing XML model files.")
+
+    models = get_models(source_folder, json_path=output_file)
+
+    if not quiet:
+        from pprint import pprint
+        pprint(models)

@@ -17,6 +17,7 @@
 namespace OPNsense\OpenApi\Parsing;
 
 use Exception;
+use InvalidArgumentException;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionParameter;
@@ -24,21 +25,9 @@ use ReflectionException;
 use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 
+$DEFAULT_SOURCE_DIR = "/usr/local/opnsense/mvc/app";
 
-// TODO: remove this when I figure out how to use Make
-if (str_starts_with(__DIR__, "/usr/")) {
-    $app_dir = __DIR__ . "/src/opnsense/mvc/app";
-} else {
-    // when developing, assume the core and plugins repos are side by side
-    $app_dir = preg_replace("/\/plugins\/.*/", "/core/src/opnsense/mvc/app", __DIR__);
-}
 
-$config = require $app_dir . "/config/config.php";
-
-// TODO: remove this when I figure out how to use Make
-set_include_path(get_include_path() . PATH_SEPARATOR . $app_dir . "/../../../../contrib");
-
-require $app_dir . "/config/loader.php";
 class Parameter {
     public $name;
     public $has_default;
@@ -337,8 +326,8 @@ function export_controllers($base_path, $output_file = null, $pretty = false)
     }
 }
 
-
-$opts = getopt("o:", ["output-file:"]);
+//region argparse
+$opts = getopt("s:o:", ["source-folder:", "output-file:"]);
 if (array_key_exists("o", $opts)) {
     $output_file = $opts["o"];
 } elseif (array_key_exists("output-file", $opts)) {
@@ -346,6 +335,46 @@ if (array_key_exists("o", $opts)) {
 } else {
     $output_file = null;
 }
+
+if (array_key_exists("s", $opts)) {
+    $source_folder = $opts["s"];
+} elseif (array_key_exists("source-folder", $opts)) {
+    $source_folder = $opts["source-folder"];
+} else {
+    $source_folder = null;
+}
+
+if (!$source_folder) {
+    $source_folder = $DEFAULT_SOURCE_DIR;
+    $app_dir = realpath($source_folder);
+} else {
+    $app_base = $source_folder;
+    while ($app_base != "/") {
+        $app_dir = realpath($app_base . "/mvc/app");
+        if ($app_dir) {break;}
+        $app_base = dirname($app_base);
+    }
+}
+if (!$app_dir) {
+    throw new InvalidArgumentException("Could not find 'mvc/app' folder in any parent of " . $source_folder);
+}
+
+$contrib_base = $app_dir;
+while ($contrib_base != "/") {
+    $contrib_dir = realpath($contrib_base . "/contrib");
+    if ($contrib_dir) {break;}
+    $contrib_base = dirname($contrib_base);
+}
+if (!$contrib_dir) {
+    throw new InvalidArgumentException("Could not find 'contrib' folder in any parent of " . $app_dir);
+}
+//endregion argparse
+
+
+$config = require $app_dir . "/config/config.php";
+
+set_include_path($contrib_dir);
+require $app_dir . "/config/loader.php";
 
 $base_path = $config->__get("application")->controllersDir;
 echo export_controllers($base_path, $output_file, true);
