@@ -1,0 +1,14 @@
+<model>
+    <mount>//OPNsense/openapi</mount>
+    <description>
+        Plugin to generate an OpenApi spec
+    </description>
+    <items>
+        <general>
+            <enabled type="BooleanField">
+                <Default>1</Default>
+                <Required>Y</Required>
+            </enabled>
+        </general>
+    </items>
+</model>
