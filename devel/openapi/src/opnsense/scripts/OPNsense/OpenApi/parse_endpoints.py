@@ -11,7 +11,7 @@ import os
 import re
 import subprocess
 from typing import Any, Dict, List, Literal, Self, TypeAlias, TypedDict
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel
 
 from parse_xml_models import get_openapi_schema_path
 
@@ -237,8 +237,7 @@ def get_endpoints(json_path: str = "./endpoints.json") -> List[Endpoint]:
                 )
                 endpoints.append(endpoint)
 
-    EndpointList = RootModel[List[Endpoint]]
-    endpoint_json = EndpointList(endpoints).model_dump_json()
+    endpoint_json = json.dumps([ep.dict() for ep in endpoints])
     with open(json_path, "w") as file:
         file.write(endpoint_json)
 

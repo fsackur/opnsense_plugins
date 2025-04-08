@@ -10,7 +10,7 @@ from typing import List
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element as XmlElement
 
-from pydantic import BaseModel, RootModel
+from pydantic import BaseModel
 
 EXCLUDE_MODEL = "mvc/app/models/OPNsense/iperf/FakeInstance.xml"
 
@@ -66,7 +66,7 @@ def parse_xml_file(xml_file: str) -> XmlModel:
         raise ValueError("items tag not found")  # never happens; just appeases the linter
 
     xml_model = _walk_xml(items)
-    return XmlModel(**xml_model.model_dump(), schema_path=schema_path)
+    return XmlModel(**xml_model.dict(), schema_path=schema_path)
 
 
 def get_model_xml_files(base_path: str) -> List[str]:
@@ -100,8 +100,7 @@ def get_models(
         model = parse_xml_file(xml_file)
         models.append(model)
 
-    ModelList = RootModel[List[XmlModel]]
-    model_json = ModelList(models).model_dump_json()
+    model_json = json.dumps([m.dict() for m in models])
     with open(json_path, mode="w") as file:
         file.write(model_json)
 
