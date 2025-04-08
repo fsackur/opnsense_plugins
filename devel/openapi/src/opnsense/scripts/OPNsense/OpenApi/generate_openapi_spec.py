@@ -8,7 +8,9 @@ It's intended to be called by configd, but CLI args will be added.
 Calls `parse_endpoints.py` and `parse_xml_models.py` if their cached JSON output is not found.
 """
 
+import argparse
 import os
+import pathlib
 from collections import defaultdict
 from typing import Any, Dict, List, Literal, Tuple, TypeAlias
 
@@ -16,7 +18,9 @@ import openapi_spec_validator as oasv
 from apispec import APISpec
 
 from parse_endpoints import Endpoint, Parameter, get_endpoints
-from parse_xml_models import XmlModel, XmlNode, get_models
+from parse_endpoints import _DEFAULT_OUTPUT_FILE as _DEFAULT_ENDPOINT_OUTPUT_FILE
+from parse_xml_models import XmlModel, XmlNode, get_models, _DEFAULT_SOURCE_FOLDER
+from parse_xml_models import _DEFAULT_OUTPUT_FILE as _DEFAULT_MODEL_OUTPUT_FILE
 
 
 # XML tags that are not properties
@@ -283,25 +287,49 @@ def test_spec(models: List[XmlModel], endpoints: List[Endpoint]):
 
 
 if __name__ == "__main__":
-    path_filter = ""
-    # # TODO: argparse. Expecting arg[1] to be, e.g., "/usr/local/opnsense/www/openapi.yml"
-    output_file = os.path.realpath("openapi.yml")
+    parser = argparse.ArgumentParser(description="generate an OpenApi spec")
+    parser.add_argument("-s", "--source-folder", default=_DEFAULT_SOURCE_FOLDER)
+    parser.add_argument("-o", "--output-file", default="openapi.yml")
+    parser.add_argument("-m", "--module", help="filter endpoints by module")
+    parser.add_argument("-c", "--controller", help="filter endpoints by controller name (excluding Controller suffix)")
+    parser.add_argument("--cache-folder", default=os.path.dirname(__file__))
+    parser.add_argument("-v", "--validate", action="store_true")
+    args = parser.parse_args()
 
-    endpoints = get_endpoints()
-    endpoints = [ep for ep in endpoints if not ep.path.startswith("/auth")]  # TODO: disallowed in API?
-    endpoints = [ep for ep in endpoints if ep.path.startswith(path_filter)]
-    # print(endpoints)
+    source_folder: str = args.source_folder
+    output_file: str = os.path.realpath(args.output_file)
+    should_validate: bool = args.validate
+    module_filter = args.module
+    controller_filter = args.controller
+    cache_folder = os.path.realpath(args.cache_folder)
 
+    if not os.path.isdir(source_folder):
+        raise ValueError(f"{source_folder} is not a directory. Specify a source folder containing XML model files.")
+
+
+    endpoints = get_endpoints(source_folder, json_path=f"{cache_folder}/{_DEFAULT_ENDPOINT_OUTPUT_FILE}")
+    if module_filter:
+        endpoints = [ep for ep in endpoints if ep.module.lower() == module_filter.lower()]
+    if controller_filter:
+        endpoints = [ep for ep in endpoints if ep.controller.lower() == controller_filter.lower()]
+
+    models = get_models(source_folder, json_path=f"{cache_folder}/{_DEFAULT_MODEL_OUTPUT_FILE}")
     model_names = set(ep.model for ep in endpoints)
-    models = get_models()
     models = [m for m in models if m.schema_path in model_names]
 
-    # test_spec(models, endpoints)
     spec = get_spec(models, endpoints)
-    validate_spec(spec)
 
-    yaml = spec.to_yaml()  # or json
+    # validation is slow
+    if should_validate:
+        validate_spec(spec)
+
+    output_file_ext = output_file.split(".")[-1]
+    if output_file_ext.lower() in ("yml", "yaml"):
+        content = spec.to_yaml()
+    else:
+        import json
+        content = json.dumps(spec.to_dict())
+
+    pathlib.Path(output_file).parent.mkdir(parents=True, exist_ok=True)
     with open(output_file, "w") as file:
-        file.write(yaml)
-
-    # validate_spec(spec)
+        file.write(content)
