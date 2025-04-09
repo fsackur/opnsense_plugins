@@ -50,6 +50,7 @@ class Method {
         "request->isPost" => "POST",
         "request->hasPost" => "POST",
         "request->getPost" => "POST",
+        "setAction" => "POST",
         "delBase" => "POST",
         "addBase" => "POST",
         "setBase" => "POST",
@@ -72,7 +73,7 @@ class Method {
     public $requires_body;
     public $model_path_map;
 
-    public function __construct(ReflectionMethod $rmethod, string $src)
+    public function __construct(ReflectionMethod $rmethod, string $src, string | null $model)
     {
         $name = preg_replace("/Action\$/", "", $rmethod->name);
 
@@ -80,22 +81,24 @@ class Method {
         // See comment in Controller ctor.
         $matches = null;
         $after_deref = "(?<=\\\$this->)";   // lookbehind for "$this->"
-        $before_bracket = "(?=\()";         // lookahead for "("
-        $call = "\S+";                      // non-space
-        $pattern = "/" . $after_deref . $call . $before_bracket . "/";
+        $call = "([^\(]+)";                 // match until opening bracket
+        $round_bracket = "(?:\(\\s*)";      // don't capture
+        $first_argument = "([^,^\)^\s]*)";  // not comma, closing bracket, or space
+        $pattern = "/" . $after_deref . $call . $round_bracket . $first_argument . "/";
         preg_match_all($pattern, $src, $matches);
 
-        $http_method = "GET";
+        $http_method = null;
         $requires_body = False;
-        foreach ($matches[0] as $call) {
+        foreach ($matches[1] as $idx => $call) {
             if (array_key_exists($call, self::$BASE_METHOD_HTTP_METHODS)) {
                 $http_method = self::$BASE_METHOD_HTTP_METHODS[$call];
+                $requires_body = $requires_body || in_array($call, self::$BASE_METHOD_REQUIRE_BODY);
             }
-            $requires_body = $requires_body || in_array($call, self::$BASE_METHOD_REQUIRE_BODY);
         }
+        if (!$http_method) {$http_method = "GET";}
 
         $matches = null;
-        $pattern = "/\\\$this->(search|get|add|del|set|toggle)Base\(([^\)]*)\)/";
+        $pattern = "/\\\$this->((search|get|add|del|set|toggle)Base|request->getPost)\(([^\)]*)\)/";
         preg_match_all($pattern, $src, $matches);
 
         $model_path_map = null;
@@ -106,16 +109,28 @@ class Method {
             // going to be the "main" model change. So we'll take the last match
             // for each capture group.
             $call = array_slice($matches[0], -1)[0];
-            $base_method = array_slice($matches[1], -1)[0] . "Base";
-            $args = preg_split("/,\s*/", trim(array_slice($matches[2], -1)[0]));
+            $base_method = array_slice($matches[1], -1)[0];
+            $args = preg_split("/,\s*/", trim(array_slice($matches[3], -1)[0]));
 
             if (in_array($base_method, ["addBase", "setBase", "getBase"])) {
                 $model_path_map = $args[0] . ":" . $args[1];
+            } elseif ($base_method === "request->getPost") {
+                if ($args[0] === "static::\$internalModelName") {
+                    // ApiMutableModelControllerBase.setAction and DashboardController.saveWidgetsAction
+                    // have null model here. For those, the entire model should be posted.
+                    if ($model) {
+                        $model_path_map = $model . ":";
+                    }
+                } else {
+                    $model_path_map = $args[0] . ":";
+                }
             } else {
                 $model_path_map = ":" . $args[0];
             }
 
-            $model_path_map = preg_replace("/\"|'/", "", $model_path_map);
+            if ($model_path_map) {
+                $model_path_map = preg_replace("/\"|'/", "", $model_path_map);
+            }
         }
 
         $params = [];
@@ -231,7 +246,7 @@ class Controller {
             $length = $rmethod->getEndLine() - $start;
             $method_src = implode("\n", array_slice($src_lines, $start, $length));
 
-            $method = new Method($rmethod, $method_src);
+            $method = new Method($rmethod, $method_src, $model);
             $methods[$method->name] = $method;
         }
         $this->methods = array_values($methods);
