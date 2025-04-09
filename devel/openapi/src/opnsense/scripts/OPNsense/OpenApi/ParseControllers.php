@@ -58,6 +58,13 @@ class Method {
         // "searchBase" => "POST"  // would be simpler; I can live with it (or GET)
     ];
 
+    protected static $BASE_METHOD_REQUIRE_BODY = [
+        "request->getPost",
+        "setAction",
+        "addBase",
+        "setBase",
+    ];
+
     public $name;
     public $method;  // HTTP method!
     public $parameters = [];
@@ -84,7 +91,7 @@ class Method {
             if (array_key_exists($call, self::$BASE_METHOD_HTTP_METHODS)) {
                 $http_method = self::$BASE_METHOD_HTTP_METHODS[$call];
             }
-            $requires_body = $requires_body || $call === "request->getPost";
+            $requires_body = $requires_body || in_array($call, self::$BASE_METHOD_REQUIRE_BODY);
         }
 
         $matches = null;
