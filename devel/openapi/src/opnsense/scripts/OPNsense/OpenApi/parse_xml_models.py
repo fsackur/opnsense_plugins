@@ -92,9 +92,9 @@ def get_model_xml_files(source_folder: str) -> List[str]:
 
 def get_models(
     source_folder: str = _DEFAULT_SOURCE_FOLDER,
-    json_path: str = _DEFAULT_OUTPUT_FILE
+    json_path: str | None = None,
 ) -> List[XmlModel]:
-    if os.path.isfile(json_path):
+    if json_path and os.path.isfile(json_path):
         with open(json_path) as file:
             model_json = file.read()
         _models = json.loads(model_json)
@@ -108,11 +108,11 @@ def get_models(
         model = parse_xml_file(xml_file)
         models.append(model)
 
-    model_json = json.dumps([m.dict() for m in models])
-
-    pathlib.Path(json_path).parent.mkdir(parents=True, exist_ok=True)
-    with open(json_path, mode="w") as file:
-        file.write(model_json)
+    if json_path:
+        model_json = json.dumps([m.dict() for m in models])
+        pathlib.Path(json_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(json_path, mode="w") as file:
+            file.write(model_json)
 
     return models
 
@@ -120,12 +120,12 @@ def get_models(
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="parse XML models")
     parser.add_argument("-s", "--source-folder", default=_DEFAULT_SOURCE_FOLDER)
-    parser.add_argument("-o", "--output-file", default=_DEFAULT_OUTPUT_FILE)
+    parser.add_argument("-o", "--output-file", default=None)
     parser.add_argument("-q", "--quiet", action="store_true")
     args = parser.parse_args()
 
     source_folder = args.source_folder
-    output_file = os.path.realpath(args.output_file)
+    output_file = os.path.realpath(args.output_file) if args.output_file else None
     quiet = args.quiet
 
     if not os.path.isdir(source_folder):

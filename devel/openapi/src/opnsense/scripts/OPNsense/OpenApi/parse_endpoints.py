@@ -198,9 +198,9 @@ def get_controller_url_segments(class_name: str):
     return segments[-3], segments[-1].replace("Controller", "")
 
 
-def get_endpoints(source_folder=_DEFAULT_SOURCE_FOLDER, json_path=_DEFAULT_OUTPUT_FILE) -> List[Endpoint]:
+def get_endpoints(source_folder=_DEFAULT_SOURCE_FOLDER, json_path: str | None = None) -> List[Endpoint]:
 
-    if os.path.isfile(json_path):
+    if json_path and os.path.isfile(json_path):
         with open(json_path) as file:
             endpoint_json = file.read()
         _endpoints = json.loads(endpoint_json)
@@ -230,11 +230,11 @@ def get_endpoints(source_folder=_DEFAULT_SOURCE_FOLDER, json_path=_DEFAULT_OUTPU
                 )
                 endpoints.append(endpoint)
 
-    endpoint_json = json.dumps([ep.dict() for ep in endpoints])
-
-    pathlib.Path(json_path).parent.mkdir(parents=True, exist_ok=True)
-    with open(json_path, "w") as file:
-        file.write(endpoint_json)
+    if json_path:
+        endpoint_json = json.dumps([ep.dict() for ep in endpoints])
+        pathlib.Path(json_path).parent.mkdir(parents=True, exist_ok=True)
+        with open(json_path, "w") as file:
+            file.write(endpoint_json)
 
     return endpoints
 
@@ -242,12 +242,12 @@ def get_endpoints(source_folder=_DEFAULT_SOURCE_FOLDER, json_path=_DEFAULT_OUTPU
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="parse OpenApi endpoints")
     parser.add_argument("-s", "--source-folder", default=_DEFAULT_SOURCE_FOLDER)
-    parser.add_argument("-o", "--output-file", default=_DEFAULT_OUTPUT_FILE)
+    parser.add_argument("-o", "--output-file", default=None)
     parser.add_argument("-q", "--quiet", action="store_true")
     args = parser.parse_args()
 
     source_folder = os.path.realpath(args.source_folder)
-    output_file = os.path.realpath(args.output_file)
+    output_file = os.path.realpath(args.output_file) if args.output_file else None
     quiet = args.quiet
 
     endpoints = get_endpoints(source_folder=source_folder, json_path=output_file)
