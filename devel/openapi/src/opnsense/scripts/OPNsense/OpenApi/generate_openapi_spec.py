@@ -292,7 +292,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output-file", default="openapi.yml")
     parser.add_argument("-m", "--module", help="filter endpoints by module")
     parser.add_argument("-c", "--controller", help="filter endpoints by controller name (excluding Controller suffix)")
-    parser.add_argument("--cache-folder", default=os.path.dirname(__file__))
+    parser.add_argument("--cache-folder", default=None)
     parser.add_argument("-v", "--validate", action="store_true")
     args = parser.parse_args()
 
@@ -301,19 +301,21 @@ if __name__ == "__main__":
     should_validate: bool = args.validate
     module_filter = args.module
     controller_filter = args.controller
-    cache_folder = os.path.realpath(args.cache_folder)
+    cache_folder = os.path.realpath(args.cache_folder) if args.cache_folder else None
 
     if not os.path.isdir(source_folder):
         raise ValueError(f"{source_folder} is not a directory. Specify a source folder containing XML model files.")
 
 
-    endpoints = get_endpoints(source_folder, json_path=f"{cache_folder}/{_DEFAULT_ENDPOINT_OUTPUT_FILE}")
+    endpoint_json_path = f"{cache_folder}/{_DEFAULT_ENDPOINT_OUTPUT_FILE}" if cache_folder else None
+    endpoints = get_endpoints(source_folder, json_path=endpoint_json_path)
     if module_filter:
         endpoints = [ep for ep in endpoints if ep.module.lower() == module_filter.lower()]
     if controller_filter:
         endpoints = [ep for ep in endpoints if ep.controller.lower() == controller_filter.lower()]
 
-    models = get_models(source_folder, json_path=f"{cache_folder}/{_DEFAULT_MODEL_OUTPUT_FILE}")
+    model_json_path = f"{cache_folder}/{_DEFAULT_MODEL_OUTPUT_FILE}" if cache_folder else None
+    models = get_models(source_folder, json_path=model_json_path)
     model_names = set(ep.model for ep in endpoints)
     models = [m for m in models if m.schema_path in model_names]
 
