@@ -60,7 +60,8 @@ ARRAY_FIELD_TYPES = [
 ]
 
 
-def get_model_spec(node: XmlNode) -> Dict[str, Any]:
+import logging
+def get_model_spec(node: XmlNode, logger) -> Dict[str, Any]:
     """
     Does the heavy lifting. The output becomes the schema for the request body or response, for
     endpoints that use this model.
@@ -91,7 +92,7 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
 
     if is_enum:
         if not has_single_child:
-            raise ValueError("enum expected to be primitive")
+            logger.error("enum expected to be primitive")
         spec = {
             "type": "string",
             "enum": [p.name for p in props[0].children],
@@ -101,7 +102,7 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
             "type": "string",
         }
     else:
-        _props = {prop.name: get_model_spec(prop) for prop in props}
+        _props = {prop.name: get_model_spec(prop, logger.getChild(prop.name)) for prop in props}
         spec = {
             "type": "object",
             "properties": _props,
@@ -218,7 +219,13 @@ def get_spec(models: List[XmlModel], endpoints: List[Endpoint]) -> APISpec:
 
 
     for model in models:
-        component = get_model_spec(model)
+        logger = logging.getLogger(model.schema_path)
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+        component = get_model_spec(model, logger)
         spec.components.schema(model.schema_path, component)
 
     for endpoint in endpoints:
@@ -264,7 +271,8 @@ def test_spec(models: List[XmlModel], endpoints: List[Endpoint]):
         spec = get_spec([], [])
         model = models_by_name.get(model_name)
         if model:
-            component = get_model_spec(model)
+            logger = logging.getLogger(model.schema_path)
+            component = get_model_spec(model, logger)
             spec.components.schema(model.schema_path, component)
             try:
                 validate_spec(spec)
