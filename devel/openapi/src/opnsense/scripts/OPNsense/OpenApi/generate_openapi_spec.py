@@ -289,6 +289,36 @@ def test_spec(models: List[XmlModel], endpoints: List[Endpoint]):
         raise Exception("Failed validation")
 
 
+def generate_openapi_spec(
+    source_folder: str,
+    should_validate: bool = False,
+    module: str | None = None,
+    controller: str | None = None,
+    cache_folder: str | None = None,
+) -> APISpec:
+
+    endpoint_json_path = f"{cache_folder}/{_DEFAULT_ENDPOINT_OUTPUT_FILE}" if cache_folder else None
+    model_json_path = f"{cache_folder}/{_DEFAULT_MODEL_OUTPUT_FILE}" if cache_folder else None
+
+    endpoints = get_endpoints(source_folder, json_path=endpoint_json_path)
+    if module:
+        endpoints = [ep for ep in endpoints if ep.module.lower() == module.lower()]
+    if controller:
+        endpoints = [ep for ep in endpoints if ep.controller.lower() == controller.lower()]
+
+    models = get_models(source_folder, json_path=model_json_path)
+    model_names = set(ep.model for ep in endpoints)
+    models = [m for m in models if m.schema_path in model_names]
+
+    spec = get_spec(models, endpoints)
+
+    # validation is slow
+    if should_validate:
+        validate_spec(spec)
+
+    return spec
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="generate an OpenApi spec")
     parser.add_argument("-s", "--source-folder", default=_DEFAULT_SOURCE_FOLDER)
@@ -299,34 +329,15 @@ if __name__ == "__main__":
     parser.add_argument("-v", "--validate", action="store_true")
     args = parser.parse_args()
 
-    source_folder: str = args.source_folder
     output_file: str = os.path.realpath(args.output_file)
-    should_validate: bool = args.validate
-    module_filter = args.module
-    controller_filter = args.controller
-    cache_folder = os.path.realpath(args.cache_folder) if args.cache_folder else None
 
-    if not os.path.isdir(source_folder):
-        raise ValueError(f"{source_folder} is not a directory. Specify a source folder containing XML model files.")
-
-
-    endpoint_json_path = f"{cache_folder}/{_DEFAULT_ENDPOINT_OUTPUT_FILE}" if cache_folder else None
-    endpoints = get_endpoints(source_folder, json_path=endpoint_json_path)
-    if module_filter:
-        endpoints = [ep for ep in endpoints if ep.module.lower() == module_filter.lower()]
-    if controller_filter:
-        endpoints = [ep for ep in endpoints if ep.controller.lower() == controller_filter.lower()]
-
-    model_json_path = f"{cache_folder}/{_DEFAULT_MODEL_OUTPUT_FILE}" if cache_folder else None
-    models = get_models(source_folder, json_path=model_json_path)
-    model_names = set(ep.model for ep in endpoints)
-    models = [m for m in models if m.schema_path in model_names]
-
-    spec = get_spec(models, endpoints)
-
-    # validation is slow
-    if should_validate:
-        validate_spec(spec)
+    spec = generate_openapi_spec(
+        source_folder=args.source_folder,
+        should_validate=args.validate,
+        module=args.module,
+        controller=args.controller,
+        cache_folder=os.path.realpath(args.cache_folder) if args.cache_folder else None,
+    )
 
     output_file_ext = output_file.split(".")[-1]
     if output_file_ext.lower() in ("yml", "yaml"):
