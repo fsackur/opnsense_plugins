@@ -73,7 +73,7 @@ class Method {
     public $requires_body;
     public $model_path_map;
 
-    public function __construct(ReflectionMethod $rmethod, string $src, string | null $model)
+    public function __construct(ReflectionMethod $rmethod, string $src)
     {
         $name = preg_replace("/Action\$/", "", $rmethod->name);
 
@@ -115,15 +115,7 @@ class Method {
             if (in_array($base_method, ["addBase", "setBase", "getBase"])) {
                 $model_path_map = $args[0] . ":" . $args[1];
             } elseif ($base_method === "request->getPost") {
-                if ($args[0] === "static::\$internalModelName") {
-                    // ApiMutableModelControllerBase.setAction and DashboardController.saveWidgetsAction
-                    // have null model here. For those, the entire model should be posted.
-                    if ($model) {
-                        $model_path_map = $model . ":";
-                    }
-                } else {
-                    $model_path_map = $args[0] . ":";
-                }
+                $model_path_map = $args[0] . ":";
             } else {
                 $model_path_map = ":" . $args[0];
             }
@@ -165,6 +157,7 @@ class Controller {
     public $parent;
     public $methods = [];
     public $model;
+    public $model_name;
     public $is_abstract;
     public $doc;
 
@@ -192,6 +185,18 @@ class Controller {
             }
         }
 
+        $model_name = null;
+        try {
+            $prop = $rclass->getProperty("internalModelName");
+            if ($prop) {
+                $model_name = $prop->getDefaultValue();
+            }
+        } catch (ReflectionException $e) {
+            if ($parent) {
+                $model_name = $parent->model_name;
+            }
+        }
+
         if ($model && $model[0] == "\\") {
             $model = substr($model, 1);
         }
@@ -205,6 +210,7 @@ class Controller {
         $this->name = $name;
         $this->parent = $parent_name;
         $this->model = $model;
+        $this->model_name = $model_name;
         $this->is_abstract = $rclass->isAbstract();
         $this->doc = $doc;
 
@@ -246,7 +252,7 @@ class Controller {
             $length = $rmethod->getEndLine() - $start;
             $method_src = implode("\n", array_slice($src_lines, $start, $length));
 
-            $method = new Method($rmethod, $method_src, $model);
+            $method = new Method($rmethod, $method_src);
             $methods[$method->name] = $method;
         }
         $this->methods = array_values($methods);
