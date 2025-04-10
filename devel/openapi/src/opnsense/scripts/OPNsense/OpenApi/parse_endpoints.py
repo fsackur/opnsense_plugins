@@ -41,7 +41,7 @@ class PhpMethod(TypedDict):
 class PhpController(TypedDict):
     name: str
     methods: List[PhpMethod]
-    model: str
+    model: str | None
     is_abstract: bool
     doc: str | Literal[False]
 #endregion DTOs from ParseControllers.php
@@ -97,17 +97,6 @@ class Method(BaseModel):
     requires_body: bool
     model_path_map: str | None
 
-    @classmethod
-    def from_php(cls, method: PhpMethod) -> Self:
-        parameters: List[PhpParameter] = method.pop("parameters")  # type: ignore
-        doc: str = method.pop("doc") or ""  # type: ignore
-        comment = DocComment.from_php(doc)
-        param_descr = comment.param_descriptions
-        return cls(
-            description=comment.description,
-            parameters=[Parameter(**p, description=param_descr.get(p["name"], "")) for p in parameters],
-            **method,  # type: ignore
-        )
 
 class Controller(BaseModel):
     name: str
@@ -116,24 +105,46 @@ class Controller(BaseModel):
     model: str | None
     is_abstract: bool
 
-    @classmethod
-    def from_php(cls, ctrl: PhpController) -> Self:
-        ctrl = ctrl.copy()
-        model: str | None = ctrl.pop("model")  # type: ignore
-        methods: List[PhpMethod] = ctrl.pop("methods")  # type: ignore
-        doc: str = ctrl.pop("doc")  # type: ignore
 
-        if model:
-            vendor, _module, name = model.split("\\")
-            model = get_openapi_schema_path(vendor, _module, name)
+def parse_php_controller(ctrl: PhpController) -> Controller:
+    model = ctrl["model"]
+    if model:
+        vendor, _module, name = model.split("\\")
+        model = get_openapi_schema_path(vendor, _module, name)
 
-        return cls(
-            model=model,
-            description=doc or "",  # TODO
-            methods=[Method.from_php(m) for m in methods],
-            **ctrl,  # type: ignore
+    methods = []
+    php_methods = ctrl["methods"]
+    for php_method in php_methods:
+        doc = php_method.get("doc") or ""
+        comment = DocComment.from_php(doc)
+        param_descr = comment.param_descriptions
+
+        params = []
+        for php_param in php_method["parameters"]:
+            description = param_descr.get(php_param["name"], "")
+            param = Parameter(
+                description=description,
+                **php_param,
+            )
+            params.append(param)
+
+        method = Method(
+            description=comment.description,
+            name=php_method["name"],
+            method=php_method["method"],
+            parameters=params,
+            requires_body=php_method["requires_body"],
+            model_path_map=php_method["model_path_map"],
         )
+        methods.append(method)
 
+    return Controller(
+        name=ctrl["name"],
+        description=ctrl["doc"] or "",  # TODO
+        methods=methods,
+        model=model,
+        is_abstract=ctrl["is_abstract"],
+    )
 #endregion intermediate DTOs
 
 
@@ -187,8 +198,9 @@ def get_controllers(source_folder: str) -> List[Controller]:
 
     php_controllers = json.loads(php_result.stdout)
     controllers = []
-    for c in php_controllers:
-        controllers.append(Controller.from_php(c))
+    for ctrl in php_controllers:
+        if not ctrl["is_abstract"]:
+            controllers.append(parse_php_controller(ctrl))
     return controllers
 
 
@@ -196,6 +208,29 @@ def get_controller_url_segments(class_name: str):
     """Expects, e.g. OPNsense\\Proxy\\Api\\AclController"""
     segments = class_name.split("\\")
     return segments[-3], segments[-1].replace("Controller", "")
+
+
+def parse_endpoints(controller: Controller) -> List[Endpoint]:
+    module, controller_name = get_controller_url_segments(controller.name)
+
+    endpoints = []
+    for method in controller.methods:
+        http_methods: List[HttpMethod] = ["GET", "POST"] if method.method == "*" else [method.method]
+        for http_method in http_methods:
+            endpoint = Endpoint(
+                description=method.description,
+                module=module,
+                controller=controller_name,
+                name=method.name,
+                method=http_method,
+                parameters=method.parameters,
+                model=controller.model,
+                requires_body=method.requires_body,
+                model_path_map=method.model_path_map,
+            )
+            endpoints.append(endpoint)
+
+    return endpoints
 
 
 def get_endpoints(source_folder=_DEFAULT_SOURCE_FOLDER, json_path: str | None = None) -> List[Endpoint]:
@@ -209,26 +244,7 @@ def get_endpoints(source_folder=_DEFAULT_SOURCE_FOLDER, json_path: str | None = 
 
     endpoints = []
     for controller in get_controllers(source_folder):
-        if controller.is_abstract:
-            continue
-
-        module, controller_name = get_controller_url_segments(controller.name)
-
-        for method in controller.methods:
-            http_methods: List[HttpMethod] = ["GET", "POST"] if method.method == "*" else [method.method]
-            for http_method in http_methods:
-                endpoint = Endpoint(
-                    description=method.description,
-                    module=module,
-                    controller=controller_name,
-                    name=method.name,
-                    method=http_method,
-                    parameters=method.parameters,
-                    model=controller.model,
-                    requires_body=method.requires_body,
-                    model_path_map=method.model_path_map,
-                )
-                endpoints.append(endpoint)
+        endpoints.extend(parse_endpoints(controller))
 
     if json_path:
         endpoint_json = json.dumps([ep.dict() for ep in endpoints])
