@@ -2,6 +2,8 @@
 
 import os
 import json
+import functools
+import inspect
 from typing import TypedDict, Dict, Any
 from pytest import fixture
 import openapi_spec_validator
@@ -10,7 +12,39 @@ import requests
 import urllib3
 from requests.auth import HTTPBasicAuth
 
-from loader import generate_openapi_spec
+from loader import generate_openapi_spec as _generate_openapi_spec
+
+
+def memoise(func):
+    memo = {}
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        spec = inspect.getfullargspec(func)
+
+        arg_list = list(args)
+        remaining_args = spec.args[len(args):]
+        for arg in remaining_args:
+            value = kwargs.get(arg, None)
+            arg_list.append(value)
+        hashable_args = tuple(arg_list)
+
+        try:
+            spec = memo[hashable_args]
+            print("found memo")
+        except KeyError:
+            print("no memo found")
+            spec = func(*args, **kwargs)
+            memo[hashable_args] = spec
+        return spec
+    return wrapper
+
+
+generate_openapi_spec = memoise(_generate_openapi_spec)
+
+
+def not_test(obj):
+    obj.__test__ = False
+    return obj
 
 
 @fixture(autouse=True)
@@ -52,8 +86,7 @@ def source_folder(config: Config):
 
 @fixture(scope="session")
 def spec(source_folder) -> APISpec:
-    spec = generate_openapi_spec(source_folder)
-    return spec
+    return generate_openapi_spec(source_folder)
 
 
 @fixture
