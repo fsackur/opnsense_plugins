@@ -2,16 +2,27 @@
 
 import os
 import json
-from typing import TypedDict
+from typing import TypedDict, Dict, Any
 from pytest import fixture
 import openapi_spec_validator
 from apispec import APISpec
+import requests
+import urllib3
+from requests.auth import HTTPBasicAuth
 
 from loader import generate_openapi_spec
 
 
+@fixture(autouse=True)
+def no_cert_warnings():
+    urllib3.disable_warnings()
+
+
 class Config(TypedDict):
     source_folder: str
+    base_url: str
+    api_key: str
+    api_secret: str
 
 
 @fixture(scope="session")
@@ -50,3 +61,32 @@ def spec_validator():
     def validate(spec: APISpec) -> None:
         openapi_spec_validator.validate(spec.to_dict())  # type: ignore
     return validate
+
+
+class Api:
+    def __init__(self, base_url, api_key, api_secret, **_):
+        self.base_url = base_url
+        self.auth = HTTPBasicAuth(api_key, api_secret)
+
+    def _request_kwargs(self, url, data: Dict | None = None):
+        kwargs: Dict[str, Any] = {
+            "url": f"{self.base_url}{url}" if url.startswith("/") else f"{self.base_url}/{url}",
+            "auth": self.auth,
+            "verify": False,
+        }
+        if data:
+            kwargs["data"] = data
+        return kwargs
+
+    def get(self, url):
+        kwargs = self._request_kwargs(url)
+        return requests.get(**kwargs)
+
+    def post(self, url, data: Dict | None = None):
+        kwargs = self._request_kwargs(url, data)
+        return requests.post(**kwargs)
+
+
+@fixture(scope="session")
+def api(config: Config):
+    return Api(**config)
