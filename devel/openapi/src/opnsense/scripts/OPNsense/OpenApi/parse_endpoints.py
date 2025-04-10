@@ -42,6 +42,7 @@ class PhpController(TypedDict):
     name: str
     methods: List[PhpMethod]
     model: str | None
+    model_name: str | None
     is_abstract: bool
     doc: str | Literal[False]
 #endregion DTOs from ParseControllers.php
@@ -112,9 +113,17 @@ def parse_php_controller(ctrl: PhpController) -> Controller:
         vendor, _module, name = model.split("\\")
         model = get_openapi_schema_path(vendor, _module, name)
 
+    model_name = ctrl["model_name"]
     methods = []
     php_methods = ctrl["methods"]
     for php_method in php_methods:
+
+        model_path_map = php_method["model_path_map"]
+        if model_path_map and "static::$internalModelName" in model_path_map:
+            if not model_name:
+                raise ValueError(f"{ctrl["name"]}.{php_method["name"]}Action does not declare $internalModelName")
+            model_path_map = model_path_map.replace("static::$internalModelName", model_name)
+
         doc = php_method.get("doc") or ""
         comment = DocComment.from_php(doc)
         param_descr = comment.param_descriptions
@@ -134,7 +143,7 @@ def parse_php_controller(ctrl: PhpController) -> Controller:
             method=php_method["method"],
             parameters=params,
             requires_body=php_method["requires_body"],
-            model_path_map=php_method["model_path_map"],
+            model_path_map=model_path_map,
         )
         methods.append(method)
 
