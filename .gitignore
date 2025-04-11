@@ -1,7 +1,2 @@
-*.pyc
-.*DS_Store
-.idea
-.sass-cache
-venv
-/*/*/work
-.vscode/**
+﻿.venv
+**/__pycache__

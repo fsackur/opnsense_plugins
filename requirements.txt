@@ -1,0 +1,6 @@
+apispec==6.8.1
+openapi-spec-validator==0.7.1
+pydantic==1.10.20
+pytest==8.3.5
+PyYAML==6.0.2
+requests==2.32.3

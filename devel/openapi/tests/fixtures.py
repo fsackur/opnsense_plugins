@@ -4,7 +4,7 @@ import os
 import json
 import functools
 import inspect
-from typing import TypedDict, Dict, Any
+from typing import TypedDict, Dict, Any, Literal
 from pytest import fixture
 import openapi_spec_validator
 from apispec import APISpec
@@ -13,6 +13,8 @@ import urllib3
 from requests.auth import HTTPBasicAuth
 
 from loader import generate_openapi_spec as _generate_openapi_spec
+
+HttpMethod = Literal["get"] | Literal["post"]
 
 
 def memoise(func):
@@ -40,11 +42,6 @@ def memoise(func):
 
 
 generate_openapi_spec = memoise(_generate_openapi_spec)
-
-
-def not_test(obj):
-    obj.__test__ = False
-    return obj
 
 
 @fixture(autouse=True)
@@ -118,6 +115,11 @@ class Api:
     def post(self, url, data: Dict | None = None):
         kwargs = self._request_kwargs(url, data)
         return requests.post(**kwargs)
+
+    def call(self, method: HttpMethod, *args, **kwargs):
+        if method == "get":
+            return self.get(*args, **kwargs)
+        return self.post(*args, **kwargs)
 
 
 @fixture(scope="session")
