@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import os
+import sys
 import json
 import functools
 import inspect
@@ -13,6 +14,7 @@ import urllib3
 from requests.auth import HTTPBasicAuth
 
 from loader import generate_openapi_spec as _generate_openapi_spec
+from loader import load_openapi_spec
 
 HttpMethod = Literal["get"] | Literal["post"]
 
@@ -82,8 +84,16 @@ def source_folder(config: Config):
 
 
 @fixture(scope="session")
-def spec(source_folder) -> APISpec:
+def generate_spec(source_folder) -> APISpec:
     return generate_openapi_spec(source_folder)
+
+
+@fixture(scope="session")
+def load_spec_from_file() -> APISpec:
+    return load_openapi_spec("openapi.yml")
+
+
+spec = load_spec_from_file if "--yaml" in sys.argv else generate_spec
 
 
 @fixture

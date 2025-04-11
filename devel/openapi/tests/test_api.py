@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import sys
 from typing import Dict, Any, Literal
 import pytest
 from pytest import mark, param
@@ -9,8 +10,12 @@ from fixtures import *
 StrDict = Dict[str, Any]
 
 
-_config: Config = config.__wrapped__()
-_spec = spec.__wrapped__(_config["source_folder"])
+
+if "--yaml" in sys.argv:
+    _spec = load_spec_from_file.__wrapped__()
+else:
+    _config: Config = config.__wrapped__()
+    _spec = generate_spec.__wrapped__(_config["source_folder"])
 urls = list(_spec._paths.keys())[0:1]
 
 
