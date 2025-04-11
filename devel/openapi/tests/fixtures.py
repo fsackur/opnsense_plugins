@@ -34,9 +34,7 @@ def memoise(func):
 
         try:
             spec = memo[hashable_args]
-            print("found memo")
         except KeyError:
-            print("no memo found")
             spec = func(*args, **kwargs)
             memo[hashable_args] = spec
         return spec
@@ -95,6 +93,16 @@ def load_spec_from_file() -> APISpec:
 
 spec = load_spec_from_file if "--yaml" in sys.argv else generate_spec
 
+
+# @fixture(scope="session")
+# def op_list(spec):
+#     return [(m, op) for m, op in spec._paths.items()]
+
+# @fixture(scope="session")
+# def path_op(op_list, request):
+#     if request.param >= len(op_list):
+#         return None, None
+#     return op_list[request.param]
 
 @fixture
 def spec_validator():

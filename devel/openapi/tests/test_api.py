@@ -6,6 +6,7 @@ import pytest
 from pytest import mark, param
 
 from fixtures import *
+from pytest_lazy_fixtures import lf
 
 StrDict = Dict[str, Any]
 
@@ -16,7 +17,7 @@ if "--yaml" in sys.argv:
 else:
     _config: Config = config.__wrapped__()
     _spec = generate_spec.__wrapped__(_config["source_folder"])
-urls = list(_spec._paths.keys())[0:1]
+urls = list(_spec._paths.keys())[31:33]
 
 
 @mark.parametrize("url", urls)
@@ -32,6 +33,13 @@ def test_endpoint(url, spec, api):
         json = response.json()
 
         assert json == expected
+
+
+# @mark.parametrize("path_op", range(9), indirect=True)
+# def test_endpoint(path_op):
+#     path, op = path_op
+#     print(path)
+
 
 
 
