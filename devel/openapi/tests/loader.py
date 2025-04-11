@@ -3,6 +3,8 @@
 import sys
 import importlib.util
 from pathlib import Path
+import yaml
+from apispec import APISpec
 
 
 plugin_base = Path(__file__).parents[1]
@@ -27,3 +29,13 @@ for script in scripts:
     spec.loader.exec_module(module)
 
 generate_openapi_spec = sys.modules["generate_openapi_spec"].generate_openapi_spec
+
+
+def load_openapi_spec(path: str) -> APISpec:
+    with open(path) as file:
+        content = file.read()
+    _spec = yaml.load(content, Loader=yaml.CLoader)
+
+    info = _spec.pop("info")
+    version = _spec.pop("openapi")
+    return APISpec(openapi_version=version, **info, **_spec)
