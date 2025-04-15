@@ -12,6 +12,9 @@ from apispec import APISpec
 import requests
 import urllib3
 from requests.auth import HTTPBasicAuth
+from openapi_schema_validator import validate
+from referencing import Registry, Resource
+from referencing.jsonschema import DRAFT202012
 
 from loader import generate_openapi_spec as _generate_openapi_spec
 from loader import load_openapi_spec
@@ -85,7 +88,7 @@ def source_folder(config: Config):
 
 @fixture(scope="session")
 def generate_spec(source_folder) -> APISpec:
-    return generate_openapi_spec(source_folder)
+    return generate_openapi_spec(source_folder, module="auth", controller="priv")
 
 
 @fixture(scope="session")
@@ -93,7 +96,8 @@ def load_spec_from_file() -> APISpec:
     return load_openapi_spec("openapi.yml")
 
 
-spec = load_spec_from_file if "--yaml" in sys.argv else generate_spec
+# spec = load_spec_from_file #if "--yaml" in sys.argv else generate_spec
+spec = generate_spec
 
 
 @fixture
@@ -135,3 +139,34 @@ class Api:
 @fixture(scope="session")
 def api(config: Config):
     return Api(**config)
+
+
+from typing import *
+import re
+def gm(_obj, props: Optional[List[str]]=None, show_dunder=False):
+    obj: Sequence = _obj if isinstance(_obj, Sequence) else [_obj]
+    if len(obj) == 0:
+        return
+
+    attrs = dir(obj[0])
+    if not show_dunder:
+        attrs = [a for a in attrs if not a.startswith("_")]
+
+    if props is not None:
+        attrs = [a for a in attrs if any(
+            p for p in props if re.match(p, a, re.IGNORECASE)
+        )]
+
+    length = len(sorted(attrs, key=len)[-1])
+    pad_length = length + 2
+
+    for obj in obj:
+        for attr in attrs:
+            msg = f"{attr}:".ljust(pad_length, " ")
+            try:
+                value = getattr(obj, attr)
+            except Exception as ex:
+                value = ex
+            value_msg = repr(value)
+            print(f"{msg}{value_msg}")
+        print("")

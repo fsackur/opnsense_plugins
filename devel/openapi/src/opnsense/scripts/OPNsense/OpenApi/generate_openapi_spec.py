@@ -146,6 +146,7 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
         spec = {
             "type": "object",
             "properties": _props,
+            "additionalProperties": False,
         }
 
     if is_array or is_multiple:
