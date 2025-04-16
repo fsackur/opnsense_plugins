@@ -325,6 +325,7 @@ def get_spec(models: List[XmlModel], endpoints: List[Endpoint]) -> APISpec:
 
     for model in models:
         component = get_model_spec(model)
+        component["x-mount"] = model.mount
         spec.components.schema(model.schema_path, component)
 
     for endpoint in endpoints:
