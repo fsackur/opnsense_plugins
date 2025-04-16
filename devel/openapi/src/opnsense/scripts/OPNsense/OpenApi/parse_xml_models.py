@@ -31,7 +31,6 @@ def get_openapi_schema_path(vendor: str, module: str, name: str) -> str:
 class XmlNode(BaseModel):
     name: str
     type: str | None
-    attributes: Dict[str, str] = {}
     value: str | None
     children: List["XmlNode"]
 
@@ -48,9 +47,16 @@ class XmlModel(XmlNode):
 
 
 def _walk_xml(element: XmlElement) -> XmlNode:
-    field_type = element.attrib.get("type", None)
+    attrib = element.attrib.copy()
+    field_type = attrib.pop("type", None)
     if field_type and field_type.startswith(".\\"):
         field_type = field_type[2:]
+
+    name = attrib.pop("value", element.tag)
+
+    # _ = attrib.pop("volatile", None)
+    # if attrib:
+    #     raise ValueError(f"Unexpected attribute {attrib} in {element}")
 
     value = element.text
     value = value.strip() if value else value
@@ -62,8 +68,7 @@ def _walk_xml(element: XmlElement) -> XmlNode:
 
     return XmlNode(
         type=field_type,
-        name=element.tag,
-        attributes=element.attrib,
+        name=name,
         value=value,
         children=children
     )

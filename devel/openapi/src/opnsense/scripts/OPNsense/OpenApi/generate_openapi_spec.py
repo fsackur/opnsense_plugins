@@ -141,7 +141,7 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
             raise ValueError("enum expected to be primitive")
         spec = {
             "type": "string",
-            "enum": [p.attributes.get("value", p.name) for p in props[0].children],
+            "enum": [p.name for p in props[0].children],
         }
     elif is_primitive:
         spec = {
