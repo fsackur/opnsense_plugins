@@ -35,6 +35,8 @@ QUALIFIERS = [
     "multiple",
     "BlankDesc",
     "Sorted",
+    "NetMaskAllowed",
+    "AllowDynamic",
 ]
 
 
@@ -105,11 +107,15 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
     - the parent is a property or primitive
     """
 
+    allow_additional = False
+
     props = []
     quals = []
     for child in node.children:
         if child.name in QUALIFIERS:
             quals.append(child)
+            if child.name == "AllowDynamic":
+                allow_additional = True
         else:
             props.append(child)
 
@@ -146,7 +152,7 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
         spec = {
             "type": "object",
             "properties": _props,
-            "additionalProperties": False,
+            "additionalProperties": allow_additional,
         }
 
     if is_array or is_multiple:
