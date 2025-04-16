@@ -12,7 +12,7 @@ import argparse
 import os
 import pathlib
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Tuple, TypeAlias
+from typing import Any, Dict, List, Literal, Tuple, TypeAlias, Callable
 
 import openapi_spec_validator as oasv
 from apispec import APISpec
@@ -21,6 +21,9 @@ from parse_endpoints import Endpoint, Parameter, get_endpoints
 from parse_endpoints import _DEFAULT_OUTPUT_FILE as _DEFAULT_ENDPOINT_OUTPUT_FILE
 from parse_xml_models import XmlModel, XmlNode, get_models, _DEFAULT_SOURCE_FOLDER
 from parse_xml_models import _DEFAULT_OUTPUT_FILE as _DEFAULT_MODEL_OUTPUT_FILE
+
+
+SchemaDict =  Dict[str, "SchemaDict | str | bool | List[str]"]
 
 
 BASE_SCHEMAS = {
@@ -55,6 +58,28 @@ BASE_SCHEMAS = {
             "widget": {},
         },
         "required": ["status"],
+        "additionalProperties": False,
+    },
+
+    "search.request": {
+        "type": "object",
+        "properties": {
+            "rowCount": {"type": "integer"},
+            "current": {"type": "integer"},
+            "searchPhrase": {"type": "string"},
+            "sort": {"type": "string", "enum": ["asc", "desc"]},
+        },
+        "additionalProperties": False,
+    },
+
+    "search.response": {
+        "type": "object",
+        "properties": {
+            "total": {"type": "integer"},
+            "rowCount": {"type": "integer"},
+            "current": {"type": "integer"},
+            "rows": {"items": {}},
+        },
         "additionalProperties": False,
     },
 }
@@ -106,7 +131,10 @@ def get_boolean_spec():
     }
 
 
-def get_enum_value_spec(text: str) -> Dict[str, Any]:
+def get_enum_value_spec(text: str | None) -> SchemaDict:
+    if text is None:
+        raise ValueError("Enum text should not be None")
+
     return {
         "type": "object",
         "properties": {
@@ -120,7 +148,7 @@ def get_enum_value_spec(text: str) -> Dict[str, Any]:
     }
 
 
-def get_relation_spec(node: XmlNode) -> Dict[str, Any]:
+def get_relation_spec(node: XmlNode) -> SchemaDict:
     """Handle schema for ModelRelationField"""
 
     props = [child for child in node.children if child.name not in QUALIFIERS]
@@ -154,7 +182,7 @@ def get_relation_spec(node: XmlNode) -> Dict[str, Any]:
     return spec
 
 
-def get_model_spec(node: XmlNode) -> Dict[str, Any]:
+def get_model_spec(node: XmlNode) -> SchemaDict:
     """
     Does the heavy lifting. The output becomes the schema for the request body or response, for
     endpoints that use this model.
@@ -164,11 +192,13 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
     - the parent is an object and the node is a property
     - the parent is a property or primitive
     """
+    spec: SchemaDict
+    _props: SchemaDict
 
     allow_additional = False
 
-    props = []
-    quals = []
+    props: List[XmlNode] = []
+    quals: List[XmlNode] = []
     for child in node.children:
         if child.name in QUALIFIERS:
             quals.append(child)
@@ -177,7 +207,7 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
         else:
             props.append(child)
 
-    first_child = (props or [None])[0]
+    first_child: XmlNode = (props or [None])[0]  # type: ignore
 
     is_primitive = not any(props)
     is_multiple = any(q for q in quals if q.name == "Multiple")
@@ -227,7 +257,7 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
     return spec
 
 
-def get_path_parameter_spec(param: Parameter) -> Dict:
+def get_path_parameter_spec(param: Parameter) -> SchemaDict:
     return {
         "in": "path",
         "name": param.name,
@@ -238,15 +268,21 @@ def get_path_parameter_spec(param: Parameter) -> Dict:
 
 def resolve_component_path(
     endpoint: Endpoint,
-    component_schemas: Dict[str, Dict]
+    component_schemas: Dict[str, Dict],
+    model_name_transform: Callable[[str], str],
 ) -> Tuple[str | None, str | None]:
 
     client_prop = None
-    if endpoint.model and endpoint.model_path_map:
-        tree: Dict[str, Dict] = component_schemas.get(endpoint.model)  # type: ignore
-        component_path = endpoint.model
+    model = endpoint.model
+    model_path_map = endpoint.model_path_map
 
-        client_prop, model_path = endpoint.model_path_map.split(":", maxsplit=2)
+    if model and model_path_map:
+        tree: Dict[str, Dict] = component_schemas.get(model)  # type: ignore
+
+        model = model_name_transform(model) if model else None
+        component_path = model
+
+        client_prop, model_path = model_path_map.split(":", maxsplit=1)
         breadcrumbs = model_path.split(".") if model_path else []
 
         while breadcrumbs:
@@ -262,16 +298,20 @@ def resolve_component_path(
             else:
                 raise KeyError(f"could not find {prop} in {component_path}")
     else:
-        component_path = endpoint.model
+        component_path = model
 
     return client_prop, component_path
 
 
-def get_operation(endpoint: Endpoint, component_schemas: Dict[str, Dict]) -> Dict[str, Any]:
-    client_prop, model_path = resolve_component_path(endpoint, component_schemas)
+def get_operation_content(
+    endpoint: Endpoint,
+    component_schemas: Dict[str, Dict],
+    model_name_transform: Callable[[str], str],
+) -> SchemaDict:
+    client_prop, model_path = resolve_component_path(endpoint, component_schemas, model_name_transform)
 
     if not model_path:
-        schema = {}
+        schema: SchemaDict = {}
     else:
         schema = {"$ref": f"#/components/schemas/{model_path}"}
         if client_prop:
@@ -282,12 +322,18 @@ def get_operation(endpoint: Endpoint, component_schemas: Dict[str, Dict]) -> Dic
                 }
             }
 
-    content = {
+    return {
         "application/json": {
             "schema": schema
         },
     }
 
+
+def get_operation(endpoint: Endpoint, component_schemas: Dict[str, Dict]) -> SchemaDict:
+    method = endpoint.method.lower()
+
+    transform = lambda name: f"{name}.response" if name == "search" else name
+    content = get_operation_content(endpoint, component_schemas, transform)
     responses = {
         "200": {
             "description": endpoint.description,
@@ -299,13 +345,16 @@ def get_operation(endpoint: Endpoint, component_schemas: Dict[str, Dict]) -> Dic
         "operationId": endpoint.operation_id,
         "responses": responses,
     }
+
     if endpoint.parameters:
         op["parameters"] = [get_path_parameter_spec(p) for p in endpoint.parameters]
 
-    method = endpoint.method.lower()
-    if method == "post" and endpoint.requires_body:
+    if method == "post":
+        transform = lambda name: f"{name}.request" if name == "search" else name
+        content = get_operation_content(endpoint, component_schemas, transform)
+
         op["requestBody"] = {
-            "required": True,
+            "required": endpoint.requires_body,
             "content": content,
         }
 
@@ -325,7 +374,7 @@ def get_spec(models: List[XmlModel], endpoints: List[Endpoint]) -> APISpec:
 
     for model in models:
         component = get_model_spec(model)
-        component["x-mount"] = model.mount
+        component["x-mount"] = model.mount  # type: ignore
         spec.components.schema(model.schema_path, component)
 
     for endpoint in endpoints:

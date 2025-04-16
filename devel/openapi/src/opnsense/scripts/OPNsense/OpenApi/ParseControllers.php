@@ -56,6 +56,7 @@ class Method {
         "setBase" => "POST",
         "toggleBase" => "POST",
         "searchBase" => "POST",  // GET works for backward-compatibility, but isn't worth publishing
+        "searchRecordsetBase" => "POST",
     ];
 
     protected static $BASE_METHOD_REQUIRE_BODY = [
@@ -71,11 +72,12 @@ class Method {
     public $doc;
     public $requires_body;
     public $model_path_map;
-    public $model_override = null;
+    public $model_override;
 
     public function __construct(ReflectionMethod $rmethod, string $src)
     {
         $name = preg_replace("/Action\$/", "", $rmethod->name);
+        $model_override = null;
 
         // Presence in source code of, e.g., "this->request->getPost(" implies POST.
         // See comment in Controller ctor.
@@ -98,7 +100,7 @@ class Method {
         if (!$http_method) {$http_method = "GET";}
 
         $matches = null;
-        $pattern = "/\\\$this->((search|get|add|del|set|toggle)Base|request->getPost)\(([^\)]*)\)/";
+        $pattern = "/\\\$this->((search|searchRecordset|get|add|del|set|toggle)Base|request->getPost)\(([^\)]*)\)/";
         preg_match_all($pattern, $src, $matches);
 
         $model_path_map = null;
@@ -112,7 +114,10 @@ class Method {
             $base_method = array_slice($matches[1], -1)[0];
             $args = preg_split("/,\s*/", trim(array_slice($matches[3], -1)[0]));
 
-            if (in_array($base_method, ["addBase", "setBase", "getBase"])) {
+            if (in_array($base_method, ["searchBase", "searchRecordsetBase"])) {
+                $model_override = "search";
+                $model_path_map = ":";
+            } elseif (in_array($base_method, ["addBase", "setBase", "getBase"])) {
                 $model_path_map = $args[0] . ":" . $args[1];
             } elseif ($base_method === "request->getPost") {
                 $model_path_map = $args[0] . ":";
@@ -148,6 +153,7 @@ class Method {
         $this->doc = $doc;
         $this->requires_body = $requires_body;
         $this->model_path_map = $model_path_map;
+        $this->model_override = $model_override;
     }
 }
 
