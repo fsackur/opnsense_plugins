@@ -80,7 +80,7 @@ BASE_SCHEMAS = {
             "current": {"type": "integer"},
             "rows": {"items": {}},
         },
-        "additionalProperties": False,
+        "additionalProperties": True,
     },
 }
 
@@ -90,6 +90,8 @@ QUALIFIERS = [
     "Mask",  # regex pattern
     "ValidationMessage", # blah
     "Constraints", # more complex
+    "MinimumValue",
+    "MaximumValue",
     "Default",
     "default",
     "Required",
@@ -99,6 +101,9 @@ QUALIFIERS = [
     "Sorted",
     "NetMaskAllowed",
     "AllowDynamic",
+    "FieldSeparator",
+    "asList",
+    "WildcardEnabled",
 ]
 
 
@@ -123,6 +128,38 @@ ARRAY_FIELD_TYPES = [
     "VTIField"
 ]
 
+SELECTED_VALUE_FIELD_TYPES = [
+    # "BaseListField",
+    # "GroupMembershipField",
+    # "MemberField",
+    # "PrivField",
+    # "AuthenticationServerField",
+    # "AuthGroupField",
+    # "CertificateField",
+    # "ConfigdActionsField",
+    # "CountryField",
+    # "InterfaceField",
+    # "JsonKeyValueStoreField",
+    # "ModelRelationField",
+    # "NetworkAliasField",
+    # "OptionField",
+    # "PortField",
+    # "ProtocolField",
+    # "VirtualIPField",
+    # "InterfaceField",
+    # "InterfaceField",
+    # "ScheduleField",
+    # "TosField",
+    # "PolicyContentField",
+    "CharonLogLevelField",
+    # "IPsecProposalField",
+    # "PoolsField",
+    # "LaggInterfaceField",
+    # "VipInterfaceField",
+    # "VlanInterfaceField",
+    # "OpenVPNServerField",
+    # "UnboundInterfaceField",
+]
 
 def get_boolean_spec():
     return {
@@ -131,17 +168,15 @@ def get_boolean_spec():
     }
 
 
-def get_enum_value_spec(text: str | None) -> SchemaDict:
-    if text is None:
-        raise ValueError("Enum text should not be None")
+def get_enum_value_spec(text: str | None = None) -> SchemaDict:
+    value: SchemaDict = {"type": "string"}
+    if text is not None:
+        value["enum"] = [text]
 
     return {
         "type": "object",
         "properties": {
-            "value": {
-                "type": "string",
-                "enum": [text],
-            },
+            "value": value,
             "selected": get_boolean_spec(),
         },
         "required": ["value", "selected"]
@@ -200,31 +235,36 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
     props: List[XmlNode] = []
     quals: List[XmlNode] = []
     for child in node.children:
-        if child.name in QUALIFIERS:
+        is_qual = child.name in QUALIFIERS
+        is_qual = is_qual or (node.type == "LegacyLinkField" and child.name == "Source")
+        if is_qual:
             quals.append(child)
             if child.name == "AllowDynamic":
                 allow_additional = True
         else:
             props.append(child)
 
+    has_single_child = len(props) == 1
     first_child: XmlNode = (props or [None])[0]  # type: ignore
 
     is_primitive = not any(props)
-    is_multiple = any(q for q in quals if q.name == "Multiple")
-    is_array = is_multiple
-    is_enum = any(p for p in props if p.name == "OptionValues")
-    is_relation = node.type == "ModelRelationField"
+    is_array = any(q for q in quals if q.name == "Multiple")
+    is_array = is_array or (has_single_child and first_child.type in ARRAY_FIELD_TYPES)
+    is_selected_value_dict = node.type in SELECTED_VALUE_FIELD_TYPES
 
-    has_single_child = len(props) == 1
-    if has_single_child:
-        is_array = is_multiple or first_child.type in ARRAY_FIELD_TYPES
 
-    if is_relation:
+    if node.type == "ModelRelationField":
         if not (has_single_child and first_child.name == "Model"):
             raise ValueError(f"node {node.name} is expected to have a single child named Model")
         return get_relation_spec(first_child)
 
-    elif is_enum:
+    elif node.type in ("NetworkField", "HostnameField"):
+        spec = {
+            "type": "object",
+            "additionalProperties": get_enum_value_spec(),
+        }
+
+    elif node.type == "OptionField":
         if not has_single_child:
             raise ValueError("enum expected to be primitive")
 
@@ -233,6 +273,12 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
             "type": "object",
             "properties": _props,
             "additionalProperties": False,
+        }
+
+    elif is_selected_value_dict:
+        spec = {
+            "type": "object",
+            "additionalProperties": get_enum_value_spec(),
         }
 
     elif is_primitive:
@@ -248,7 +294,7 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
             "additionalProperties": allow_additional,
         }
 
-    if is_array or is_multiple:
+    if is_array:
         spec = {
             "type": "array",
             "items": spec,
