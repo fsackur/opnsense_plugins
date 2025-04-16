@@ -123,6 +123,8 @@ def parse_php_controller(ctrl: PhpController) -> Controller:
             if not model_name:
                 raise ValueError(f"{ctrl["name"]}.{php_method["name"]}Action does not declare $internalModelName")
             model_path_map = model_path_map.replace("static::$internalModelName", model_name)
+        elif model_name and not model_path_map:
+            model_path_map = model_name + ":"
 
         doc = php_method.get("doc") or ""
         comment = DocComment.from_php(doc)
