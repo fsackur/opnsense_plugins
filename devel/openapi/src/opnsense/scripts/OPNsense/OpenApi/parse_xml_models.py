@@ -8,7 +8,7 @@ import json
 import os
 import argparse
 import pathlib
-from typing import List
+from typing import List, Dict
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element as XmlElement
 
@@ -29,10 +29,14 @@ def get_openapi_schema_path(vendor: str, module: str, name: str) -> str:
 #region Intermediate DTOs
 # for validation and to smooth over XML child/attribute distinctions
 class XmlNode(BaseModel):
-    type: str | None
     name: str
+    type: str | None
+    attributes: Dict[str, str] = {}
     value: str | None
     children: List["XmlNode"]
+
+    def __repr__(self):
+        return f"XmlNode({self.name})"
 
 # To save passing path recursively, only the root node gets it
 class XmlModel(XmlNode):
@@ -59,6 +63,7 @@ def _walk_xml(element: XmlElement) -> XmlNode:
     return XmlNode(
         type=field_type,
         name=element.tag,
+        attributes=element.attrib,
         value=value,
         children=children
     )
