@@ -68,13 +68,19 @@ def test_endpoint(url, spec, api, get_node: ElementFetcher):
         schema = op["responses"]["200"]["content"]["application/json"]["schema"]
         print(schema)
         # schema = {"$ref": '#/components/schemas/opnsense.auth.priv'}
-        schema, model_name = resolve_schema(schema, spec.components.schemas)
+        schema, model_name, model_path = resolve_schema(schema, spec.components.schemas)
+        # print(model_name, model_path)
 
         params = op.get("parameters", [])
         if params:
+            nodes = []
             model = spec.components.schemas.get(model_name, {})
             xpath = model.get("x-mount", None)
             if xpath:
+                print(xpath)
+                if model_path:
+                    x_model_path = model_path.replace("properties/", "").replace("items/", "")
+                    xpath = f"{xpath}/{x_model_path}"
                 nodes = get_node(xpath)
             attrib = nodes[0].attrib if nodes else {}
             for param in params:
@@ -83,8 +89,6 @@ def test_endpoint(url, spec, api, get_node: ElementFetcher):
                 url = url.replace(f"{{{param["name"]}}}", value)
 
         print(f"=== {url} {nodes} ===")
-
-        return
 
         response = api.call(method, url)
         response_body = response.json()
@@ -103,9 +107,12 @@ def test_endpoint(url, spec, api, get_node: ElementFetcher):
             raise
 
 
-def resolve_schema(schema: StrDict, components: StrDict) -> Tuple[StrDict, str | None]:
-    _schema = schema.copy()
+def resolve_schema(schema: StrDict, components: StrDict): #-> Tuple[StrDict, str | None]:
     model_name = None
+    model_path = None
+
+    _schema = schema.copy()
+
     ref: str | None = _schema.pop("$ref", None)
     if ref is not None:
         model_parts = ref.replace("#/components/schemas/", "")
@@ -122,10 +129,11 @@ def resolve_schema(schema: StrDict, components: StrDict) -> Tuple[StrDict, str |
 
     for k, v in _schema.items():
         if isinstance(v, Mapping):
-            v, inner_model_name = resolve_schema(v, components)
-            model_name = model_name or inner_model_name
+            v, _model_name, _model_path = resolve_schema(v, components)
+            model_name = model_name or _model_name
+            model_path = model_path or _model_path
         _schema[k] = v
-    return _schema, model_name
+    return _schema, model_name, model_path
 
 
 
