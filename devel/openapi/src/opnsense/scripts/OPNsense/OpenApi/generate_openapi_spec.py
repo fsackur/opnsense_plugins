@@ -23,6 +23,43 @@ from parse_xml_models import XmlModel, XmlNode, get_models, _DEFAULT_SOURCE_FOLD
 from parse_xml_models import _DEFAULT_OUTPUT_FILE as _DEFAULT_MODEL_OUTPUT_FILE
 
 
+BASE_SCHEMAS = {
+    "result": {
+        "type": "object",
+        "properties": {
+            "result": {"type": "string"},
+            "validations": {
+            },
+            "error": {"type": "string"},
+        },
+        "required": ["result"],
+        "additionalProperties": False,
+    },
+
+    "response": {
+        "type": "object",
+        "properties": {
+            "response": {"type": "string"},
+        },
+        "required": ["response"],
+        "additionalProperties": False,
+    },
+
+    "status": {
+        "type": "object",
+        "properties": {
+            "status": {
+                "type": "string",
+                "enum": ["ok", "failed", "stopped", "disabled", "running", "unknown", "STUBBED RESPONSE"],  # TODO
+            },
+            "widget": {},
+        },
+        "required": ["status"],
+        "additionalProperties": False,
+    },
+}
+
+
 # XML tags that are not properties
 QUALIFIERS = [
     "Mask",  # regex pattern
@@ -233,15 +270,17 @@ def resolve_component_path(
 def get_operation(endpoint: Endpoint, component_schemas: Dict[str, Dict]) -> Dict[str, Any]:
     client_prop, model_path = resolve_component_path(endpoint, component_schemas)
 
-    model_path = model_path or "status"
-    schema = {"$ref": f"#/components/schemas/{model_path}"}
-    if client_prop:
-        schema = {
-            "type": "object",
-            "properties": {
-                client_prop: schema,
+    if not model_path:
+        schema = {}
+    else:
+        schema = {"$ref": f"#/components/schemas/{model_path}"}
+        if client_prop:
+            schema = {
+                "type": "object",
+                "properties": {
+                    client_prop: schema,
+                }
             }
-        }
 
     content = {
         "application/json": {
@@ -281,16 +320,8 @@ def get_spec(models: List[XmlModel], endpoints: List[Endpoint]) -> APISpec:
         info={"description": "API for managing your OPNsense firewall"},
     )
 
-    # TODO: probably needs to be "result" and have "result" prop? needs investigation
-    default_schema_name = "status"
-    default_schema = {
-        "type": "object",
-        "properties": {
-            "status": {"type": "string"}
-        }
-    }
-    spec.components.schema(default_schema_name, default_schema)
-
+    for name, schema in BASE_SCHEMAS.items():
+        spec.components.schema(name, schema)
 
     for model in models:
         component = get_model_spec(model)

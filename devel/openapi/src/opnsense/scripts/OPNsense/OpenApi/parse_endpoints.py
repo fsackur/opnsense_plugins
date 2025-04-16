@@ -37,6 +37,7 @@ class PhpMethod(TypedDict):
     doc: str | Literal[False]
     requires_body: bool
     model_path_map: str | None
+    model_override: str | None
 
 class PhpController(TypedDict):
     name: str
@@ -97,26 +98,27 @@ class Method(BaseModel):
     parameters: List[Parameter]
     requires_body: bool
     model_path_map: str | None
+    model: str | None
 
 
 class Controller(BaseModel):
     name: str
     description: str
     methods: List[Method]
-    model: str | None
     is_abstract: bool
 
 
 def parse_php_controller(ctrl: PhpController) -> Controller:
-    model = ctrl["model"]
-    if model:
-        vendor, _module, name = model.split("\\")
-        model = get_openapi_schema_path(vendor, _module, name)
 
     model_name = ctrl["model_name"]
     methods = []
     php_methods = ctrl["methods"]
     for php_method in php_methods:
+
+        model = php_method["model_override"] or ctrl["model"]
+        if model and "\\" in model:
+            vendor, _module, name = model.split("\\")
+            model = get_openapi_schema_path(vendor, _module, name)
 
         model_path_map = php_method["model_path_map"]
         if model_path_map and "static::$internalModelName" in model_path_map:
@@ -146,6 +148,7 @@ def parse_php_controller(ctrl: PhpController) -> Controller:
             parameters=params,
             requires_body=php_method["requires_body"],
             model_path_map=model_path_map,
+            model=model,
         )
         methods.append(method)
 
@@ -153,7 +156,6 @@ def parse_php_controller(ctrl: PhpController) -> Controller:
         name=ctrl["name"],
         description=ctrl["doc"] or "",  # TODO
         methods=methods,
-        model=model,
         is_abstract=ctrl["is_abstract"],
     )
 #endregion intermediate DTOs
@@ -228,7 +230,6 @@ def parse_endpoints(controller: Controller) -> List[Endpoint]:
         endpoint = Endpoint(
             module=module,
             controller=controller_name,
-            model=controller.model,
             **method.dict(),
         )
         endpoints.append(endpoint)

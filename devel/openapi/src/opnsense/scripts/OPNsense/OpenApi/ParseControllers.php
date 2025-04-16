@@ -71,6 +71,7 @@ class Method {
     public $doc;
     public $requires_body;
     public $model_path_map;
+    public $model_override = null;
 
     public function __construct(ReflectionMethod $rmethod, string $src)
     {
@@ -254,6 +255,17 @@ class Controller {
             $method = new Method($rmethod, $method_src);
             $methods[$method->name] = $method;
         }
+
+        if ($name == "OPNsense\\Base\\ApiMutableModelControllerBase") {
+            $methods["set"]->model_override = "result";
+        } elseif ($name == "OPNsense\\Base\\ApiMutableServiceControllerBase") {
+            $methods["start"]->model_override = "response";
+            $methods["stop"]->model_override = "response";
+            $methods["restart"]->model_override = "response";
+            $methods["reconfigure"]->model_override = "status";
+            $methods["status"]->model_override = "status";
+        }
+
         $this->methods = array_values($methods);
     }
 }
