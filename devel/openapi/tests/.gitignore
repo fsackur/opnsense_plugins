@@ -1,1 +1,4 @@
 ﻿config.json
+config*.xml
+*.log
+*.txt
