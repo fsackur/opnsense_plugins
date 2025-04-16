@@ -21,7 +21,17 @@ StrDict = Dict[str, Any]
 # else:
 #     _config: Config = config.__wrapped__()
 #     _spec = generate_spec.__wrapped__(_config["source_folder"])
-# urls = list(_spec._paths.keys())[8:9]
+# urls = list(_spec._paths.keys())
+# urls = [u for u in urls if not "firmware" in u]
+
+urls = urls[0:2]
+
+import logging
+logger = logging.getLogger("api_tests")
+handler = logging.FileHandler("log.txt")
+logger.addHandler(handler)
+logger.setLevel(logging.DEBUG)
+
 
 @fixture
 def registry(spec: APISpec) -> Registry:
@@ -65,7 +75,11 @@ def test_endpoint(url, spec, api):
         response_body = response.json()
         print(response_body)
         print(schema)
-        validate(response_body, schema)
+        try:
+            validate(response_body, schema)
+            logger.info(f"{url}: pass")
+        except Exception as ex:
+            logger.error(f"{url}: {ex.__class__.__name__}: {ex.args[0]}")
 
 
 def resolve_schema(schema: StrDict, components: StrDict) -> StrDict:

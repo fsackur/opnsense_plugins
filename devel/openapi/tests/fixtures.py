@@ -88,7 +88,7 @@ def source_folder(config: Config):
 
 @fixture(scope="session")
 def generate_spec(source_folder) -> APISpec:
-    return generate_openapi_spec(source_folder, module="auth", controller="priv")
+    return generate_openapi_spec(source_folder) #, module="auth", controller="priv")
 
 
 @fixture(scope="session")
