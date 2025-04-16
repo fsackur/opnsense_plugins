@@ -40,6 +40,7 @@ class XmlNode(BaseModel):
 # To save passing path recursively, only the root node gets it
 class XmlModel(XmlNode):
     schema_path: str
+    mount: str | None
 
     def __repr__(self):
         return f"XmlModel({self.schema_path})"
@@ -84,8 +85,16 @@ def parse_xml_file(xml_file: str) -> XmlModel:
     if items is None:
         raise ValueError("items tag not found")  # never happens; just appeases the linter
 
+    mount = tree.find("mount")
+    if mount is not None:
+        mount_path = mount.text
+        if mount_path and mount_path != ":memory:":
+            mount_path = f".{mount_path.replace("+", "")}"
+        else:
+            mount_path = None
+
     xml_model = _walk_xml(items)
-    return XmlModel(**xml_model.dict(), schema_path=schema_path)
+    return XmlModel(**xml_model.dict(), schema_path=schema_path, mount=mount_path)
 
 
 def get_model_xml_files(source_folder: str) -> List[str]:
