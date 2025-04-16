@@ -1,7 +1,7 @@
 #! /usr/bin/env python3
 
 import sys
-from typing import Dict, Any, Literal, Hashable, Mapping
+from typing import Dict, Any, Literal, Hashable, Mapping, Tuple
 import pytest
 from pytest import mark, param
 from unittest.mock import ANY
@@ -62,15 +62,31 @@ def registry(spec: APISpec) -> Registry:
 from pprint import pprint, pformat
 
 @mark.parametrize("url", urls)
-def test_endpoint(url, spec, api):
+def test_endpoint(url, spec, api, get_node: ElementFetcher):
     method_op = spec._paths[url]
     for method, op in [(k, v) for k, v in method_op.items() if k in ("get", "post")]:
         schema = op["responses"]["200"]["content"]["application/json"]["schema"]
         # schema = {"$ref": '#/components/schemas/opnsense.auth.priv'}
-        schema = resolve_schema(schema, spec.components.schemas)
+        schema, model_name = resolve_schema(schema, spec.components.schemas)
+
+        params = op.get("parameters", [])
+        if params:
+            model = spec.components.schemas.get(model_name, {})
+            xpath = model.get("x-mount", None)
+            if xpath:
+                nodes = get_node(xpath)
+            attrib = nodes[0].attrib if nodes else {}
+            for param in params:
+                value = attrib.get(param["name"])
+                value = str(value) if value else "null"
+                url = url.replace(f"{{{param["name"]}}}", value)
+
+        print(f"=== {url} {params} ===")
+
         response = api.call(method, url)
         response_body = response.json()
-        print(f"=== {url} ===")
+
+
         print(f"response = {response_body}")
         print(f"schema = {schema}")
         try:
@@ -81,8 +97,9 @@ def test_endpoint(url, spec, api):
             raise
 
 
-def resolve_schema(schema: StrDict, components: StrDict) -> StrDict:
+def resolve_schema(schema: StrDict, components: StrDict) -> Tuple[StrDict, str | None]:
     _schema = schema.copy()
+    model_name = None
     ref: str | None = _schema.pop("$ref", None)
     if ref is not None:
         model_parts = ref.replace("#/components/schemas/", "")
@@ -99,9 +116,10 @@ def resolve_schema(schema: StrDict, components: StrDict) -> StrDict:
 
     for k, v in _schema.items():
         if isinstance(v, Mapping):
-            v = resolve_schema(v, components)
+            v, inner_model_name = resolve_schema(v, components)
+            model_name = model_name or inner_model_name
         _schema[k] = v
-    return _schema
+    return _schema, model_name
 
 
 

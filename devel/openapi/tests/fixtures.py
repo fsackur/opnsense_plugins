@@ -15,6 +15,8 @@ from requests.auth import HTTPBasicAuth
 from openapi_schema_validator import validate
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
+import xml.etree.cElementTree as ElementTree
+from xml.etree.ElementTree import Element as XmlElement
 
 from loader import generate_openapi_spec as _generate_openapi_spec
 from loader import load_openapi_spec
@@ -170,3 +172,19 @@ def gm(_obj, props: Optional[List[str]]=None, show_dunder=False):
             value_msg = repr(value)
             print(f"{msg}{value_msg}")
         print("")
+
+
+@fixture(scope="session")
+def opnsense_config(api) -> XmlElement:
+    conf = api.get("/core/backup/download/this").text
+    root = ElementTree.fromstring(conf)
+    return root
+
+ElementFetcher = Callable[[str], List[XmlElement]]
+
+@fixture(scope="session")
+def get_node(opnsense_config) -> ElementFetcher:
+    return opnsense_config.findall
+    # def get_node(xpath: str) -> XmlElement:
+    #     return opnsense_config.findall(xpath)
+    # return get_node
