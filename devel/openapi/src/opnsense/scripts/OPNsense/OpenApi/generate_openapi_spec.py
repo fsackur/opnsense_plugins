@@ -62,6 +62,27 @@ ARRAY_FIELD_TYPES = [
 ]
 
 
+def get_boolean_spec():
+    return {
+        "type": "integer",
+        "enum": [0, 1],
+    }
+
+
+def get_enum_value_spec(text: str) -> Dict[str, Any]:
+    return {
+        "type": "object",
+        "properties": {
+            "value": {
+                "type": "string",
+                "enum": [text],
+            },
+            "selected": get_boolean_spec(),
+        },
+        "required": ["value", "selected"]
+    }
+
+
 def get_relation_spec(node: XmlNode) -> Dict[str, Any]:
     """Handle schema for ModelRelationField"""
 
@@ -139,14 +160,19 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
     elif is_enum:
         if not has_single_child:
             raise ValueError("enum expected to be primitive")
+
+        _props = {prop.name: get_enum_value_spec(prop.value) for prop in first_child.children}
         spec = {
-            "type": "string",
-            "enum": [p.name for p in props[0].children],
+            "type": "object",
+            "properties": _props,
+            "additionalProperties": False,
         }
+
     elif is_primitive:
         spec = {
             "type": "string",
         }
+
     else:
         _props = {prop.name: get_model_spec(prop) for prop in props}
         spec = {
@@ -160,6 +186,7 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
             "type": "array",
             "items": spec,
         }
+
     return spec
 
 
