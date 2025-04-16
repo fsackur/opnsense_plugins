@@ -60,6 +60,40 @@ ARRAY_FIELD_TYPES = [
 ]
 
 
+def get_relation_spec(node: XmlNode) -> Dict[str, Any]:
+    """Handle schema for ModelRelationField"""
+
+    props = [child for child in node.children if child.name not in QUALIFIERS]
+    refs = []
+    for child in props:
+        relation_props = {prop.name: prop.value for prop in child.children}
+        relation_model: str = relation_props["source"]  # type: ignore
+        ref = f"#/components/schemas/{relation_model.lower()}"
+        ref = f"{ref}/items/properties/{relation_props['items']}"  # we know that the related model will be array, so look in 'items' subschema
+        ref = f"{ref}/properties/{relation_props['display']}"
+        refs.append(ref)
+
+    if len(refs) == 1:
+        schema = {"$ref": refs[0]}
+    else:
+        schema = {"oneOf": [{"$ref": ref} for ref in refs]}
+
+    spec = {
+        "type": "object",
+        "additionalProperties": {
+            "type": "object",
+            "properties": {
+                "value": schema,
+                "selected": {
+                    "type": "integer",  # TODO: 0 or 1
+                },
+            },
+            "additionalProperties": False,
+        }
+    }
+    return spec
+
+
 def get_model_spec(node: XmlNode) -> Dict[str, Any]:
     """
     Does the heavy lifting. The output becomes the schema for the request body or response, for
@@ -79,17 +113,24 @@ def get_model_spec(node: XmlNode) -> Dict[str, Any]:
         else:
             props.append(child)
 
+    first_child = (props or [None])[0]
+
     is_primitive = not any(props)
     is_multiple = any(q for q in quals if q.name == "Multiple")
     is_array = is_multiple
     is_enum = any(p for p in props if p.name == "OptionValues")
+    is_relation = node.type == "ModelRelationField"
 
     has_single_child = len(props) == 1
     if has_single_child:
-        prop = props[0]
-        is_array = is_multiple or prop.type in ARRAY_FIELD_TYPES
+        is_array = is_multiple or first_child.type in ARRAY_FIELD_TYPES
 
-    if is_enum:
+    if is_relation:
+        if not (has_single_child and first_child.name == "Model"):
+            raise ValueError(f"node {node.name} is expected to have a single child named Model")
+        return get_relation_spec(first_child)
+
+    elif is_enum:
         if not has_single_child:
             raise ValueError("enum expected to be primitive")
         spec = {
