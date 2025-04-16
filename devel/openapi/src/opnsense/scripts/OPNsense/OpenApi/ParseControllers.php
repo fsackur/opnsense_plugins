@@ -55,8 +55,7 @@ class Method {
         "addBase" => "POST",
         "setBase" => "POST",
         "toggleBase" => "POST",
-        "searchBase" => "*",  // in the existing script, this means GET and POST are both accepted
-        // "searchBase" => "POST"  // would be simpler; I can live with it (or GET)
+        "searchBase" => "POST",  // GET works for backward-compatibility, but isn't worth publishing
     ];
 
     protected static $BASE_METHOD_REQUIRE_BODY = [

@@ -32,7 +32,7 @@ class PhpParameter(TypedDict):
 
 class PhpMethod(TypedDict):
     name: str
-    method: HttpMethod | Literal["*"]
+    method: HttpMethod
     parameters: List[PhpParameter]
     doc: str | Literal[False]
     requires_body: bool
@@ -93,7 +93,7 @@ class Parameter(BaseModel):
 class Method(BaseModel):
     description: str
     name: str
-    method: HttpMethod | Literal["*"]
+    method: HttpMethod
     parameters: List[Parameter]
     requires_body: bool
     model_path_map: str | None
@@ -186,9 +186,8 @@ class Endpoint(BaseModel):
 
     @property
     def operation_id(self) -> str:
-        suffix = "_Post" if self.method == "POST" else ""
         name = self.name[0].capitalize() + self.name[1:]
-        return f"{self.module}{self.controller}{name}{suffix}"
+        return f"{self.module}{self.controller}{name}"
 
     def __repr__(self):
         return self.path
@@ -224,20 +223,13 @@ def parse_endpoints(controller: Controller) -> List[Endpoint]:
 
     endpoints = []
     for method in controller.methods:
-        http_methods: List[HttpMethod] = ["GET", "POST"] if method.method == "*" else [method.method]
-        for http_method in http_methods:
-            endpoint = Endpoint(
-                description=method.description,
-                module=module,
-                controller=controller_name,
-                name=method.name,
-                method=http_method,
-                parameters=method.parameters,
-                model=controller.model,
-                requires_body=method.requires_body,
-                model_path_map=method.model_path_map,
-            )
-            endpoints.append(endpoint)
+        endpoint = Endpoint(
+            module=module,
+            controller=controller_name,
+            model=controller.model,
+            **method.dict(),
+        )
+        endpoints.append(endpoint)
 
     return endpoints
 
