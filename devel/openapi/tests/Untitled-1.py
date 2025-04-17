@@ -3,7 +3,8 @@ from openapi_schema_validator import validate
 
 
 
-
+opnsense.firewall.alias/items/properties/aliases.alias/properties/name
+opnsense.firewall.alias/properties/aliases/items/properties/alias/properties/name
 
 
 
