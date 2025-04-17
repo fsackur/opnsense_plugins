@@ -12,7 +12,7 @@ import argparse
 import os
 import pathlib
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Tuple, TypeAlias, Callable
+from typing import Any, Dict, List, Literal, Tuple, TypeAlias, Callable, Generic, TypeVar
 
 import openapi_spec_validator as oasv
 from apispec import APISpec
@@ -24,6 +24,55 @@ from parse_xml_models import _DEFAULT_OUTPUT_FILE as _DEFAULT_MODEL_OUTPUT_FILE
 
 
 SchemaDict =  Dict[str, "SchemaDict | str | bool | List[str]"]
+
+K = TypeVar("K")
+V = TypeVar("V")
+
+class LazyDictionary(Generic[K, V]):
+
+    __data: Dict[K, V] | None = None
+    _func: Callable[[], Dict[K, V]] = dict
+
+    def __init__(self, func: Callable[[], Dict[K, V]]):
+        self.__data = None
+        self._func = func
+
+    @property
+    def _data(self) -> Dict[K, V]:
+        if self.__data is None:
+            self.__data = self._func()
+        return self.__data
+
+    def __iter__(self):
+        return iter(self._data)
+
+    def __len__(self):
+        return len(self._data)
+
+    def __getitem__(self, name):
+        return self._data.__getitem__(name)
+
+    def __setitem__(self, name, value):
+        return self._data.__setitem__(name, value)
+
+    def __delitem__(self, name):
+        return self._data.__delitem__(name)
+
+    def __deepcopy__(self, memo):
+        return self._data
+
+    def __str__(self):
+        return str(self._data)
+
+    def __repr__(self):
+        return f"{self.__class__.__name__}({repr(self._data)})"
+
+    def __getattr__(self, name):
+        # if name == "_func":
+        #     return self._func
+        if name in self.__dict__:
+            return self.__dict__[name]
+        return getattr(self._data, name)
 
 
 BOOLEAN_SCHEMA = {
@@ -250,19 +299,32 @@ def get_relation_spec(node: XmlNode) -> SchemaDict:
     """Handle schema for ModelRelationField"""
 
     props = [child for child in node.children if child.name not in QUALIFIERS]
-    refs = []
-    for child in props:
-        relation_props = {prop.name: prop.value for prop in child.children}
-        relation_model: str = relation_props["source"]  # type: ignore
-        ref = f"#/components/schemas/{relation_model.lower()}"
-        ref = f"{ref}/items/properties/{relation_props['items']}"  # we know that the related model will be array, so look in 'items' subschema
-        ref = f"{ref}/properties/{relation_props['display']}"
-        refs.append(ref)
+    if not props:
+        raise ValueError(f"{node} has no properties")
 
-    if len(refs) == 1:
-        schema = {"$ref": refs[0]}
+    ref_schemas = []
+    for prop in props:
+        relation_props = {child_prop.name: child_prop.value for child_prop in prop.children}
+        relation_model: str = relation_props["source"]  # type: ignore
+        relation_model_path: str = relation_props['items']  # type: ignore
+        display_prop: str = relation_props['display']  # type: ignore
+        if "," in display_prop:  # only happens in swanctl
+            display_prop = display_prop.split(",")[0]
+
+        def resolver():
+            path = ComponentRegistry.resolve_property_path(
+                component_name=relation_model.lower(),
+                model_property_path=f"{relation_model_path}.{display_prop}"
+            )
+            ref = f"#/components/schemas/{path}"
+            return {"$ref": ref}
+
+        ref_schemas.append(LazyDictionary(resolver))
+
+    if len(ref_schemas) == 1:
+        schema = ref_schemas[0]
     else:
-        schema = {"oneOf": [{"$ref": ref} for ref in refs]}
+        schema = {"oneOf": ref_schemas}
 
     spec = {
         "type": "object",
