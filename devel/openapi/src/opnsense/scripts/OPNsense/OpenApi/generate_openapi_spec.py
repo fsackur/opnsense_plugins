@@ -23,7 +23,7 @@ from parse_xml_models import XmlModel, XmlNode, get_models, _DEFAULT_SOURCE_FOLD
 from parse_xml_models import _DEFAULT_OUTPUT_FILE as _DEFAULT_MODEL_OUTPUT_FILE
 
 
-SchemaDict =  Dict[str, "SchemaDict | str | bool | List[str]"]
+SchemaDict =  Dict[str, "SchemaDict | str | bool | List[str | int]"]
 
 K = TypeVar("K")
 V = TypeVar("V")
@@ -75,7 +75,7 @@ class LazyDictionary(Generic[K, V]):
         return getattr(self._data, name)
 
 
-BOOLEAN_SCHEMA = {
+BOOLEAN_SCHEMA: SchemaDict = {
     "type": "integer",
     "enum": [0, 1],
 }
@@ -429,10 +429,17 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
 
 
 def get_path_parameter_spec(param: Parameter) -> SchemaDict:
+    schema: SchemaDict = BOOLEAN_SCHEMA.copy() if param.type == "boolean" else {"type": param.type}
+    if param.has_default:
+        schema["default"] = param.default if param.default else {
+            "boolean": 0,
+            "integer": 0,
+            "string": ""
+        }[param.type]
     return {
         "in": "path",
         "name": param.name,
-        "schema": {"type": "string"},  # TODO
+        "schema": schema,
         "required": True,  # to support optional path params, you need another operation without the param :-(
     }
 
