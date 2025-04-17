@@ -12,6 +12,7 @@ import pathlib
 import argparse
 import re
 import subprocess
+from collections import defaultdict
 from typing import Any, Dict, List, Literal, Self, TypeAlias, TypedDict, Tuple
 from pydantic import BaseModel
 
@@ -21,6 +22,18 @@ from parse_xml_models import get_openapi_schema_path, _DEFAULT_SOURCE_FOLDER
 _DEFAULT_OUTPUT_FILE = "endpoints.json"
 
 HttpMethod: TypeAlias = Literal["GET"] | Literal["POST"]
+
+PHP_TO_SPEC_TYPE_MAP = {
+    "array": "array",
+    "array|null": "array",
+    "bool": "boolean",
+    "int": "integer",
+    "integer": "integer",
+    "int|string": "integer",
+    "string|int": "integer",
+}
+PHP_TO_SPEC_TYPE_MAP = defaultdict(lambda: "string", PHP_TO_SPEC_TYPE_MAP)
+
 
 #region DTOs from ParseControllers.php
 # This is, approximately, raw php Reflection.
@@ -55,6 +68,7 @@ class PhpController(TypedDict):
 class DocComment(BaseModel):
     description: str
     param_descriptions: Dict[str, str]
+    param_types: Dict[str, str]
 
     @classmethod
     def from_php(cls, doc: str) -> Self:
@@ -63,6 +77,7 @@ class DocComment(BaseModel):
 
         descr_lines = []
         param_descr = {}
+        param_types = {}
         pattern = re.compile(r"@param\s+(?P<type>\S*)\s*\$(?P<name>\S+)\s*(?P<descr>.*)")
         for line in lines:
             if not line.startswith("@"):
@@ -72,15 +87,18 @@ class DocComment(BaseModel):
             m = pattern.match(line)
             if m:
                 param_descr[m.group("name")] = m.group("descr")
+                param_types[m.group("name")] = m.group("type") or ""
 
         return cls(
             description=" ".join(descr_lines),
             param_descriptions=param_descr,
+            param_types=param_types,
         )
 
 
 class Parameter(BaseModel):
     name: str
+    type: str
     description: str
     has_default: bool
     default: Any
@@ -162,12 +180,19 @@ def parse_endpoints(ctrl: PhpController) -> List[Endpoint]:
 
         doc = php_method.get("doc") or ""
         comment = DocComment.from_php(doc)
-        param_descr = comment.param_descriptions
 
         params = []
         for php_param in php_method["parameters"]:
-            description = param_descr.get(php_param["name"], "")
-            param = Parameter(description=description, **php_param)
+            description = comment.param_descriptions.get(php_param["name"], "")
+            php_type = comment.param_types.get(php_param["name"], "")
+            if php_param["has_default"] and not php_type:
+                php_type = type(php_param["default"]).__name__
+
+            param = Parameter(
+                description=description,
+                type=PHP_TO_SPEC_TYPE_MAP[php_type],
+                **php_param
+            )
             params.append(param)
 
         endpoint = Endpoint(
