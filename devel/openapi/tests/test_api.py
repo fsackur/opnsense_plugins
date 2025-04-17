@@ -25,16 +25,101 @@ StrDict = Dict[str, Any]
 # urls = list(_spec._paths.keys())
 # urls = [u for u in urls if not "firmware" in u]
 
+if "--url" in sys.argv:
+    index = sys.argv.index("--url")
+    url_arg = sys.argv[index + 1]
+    filters = re.split(r",\s*|\s+", url_arg)
+    _urls = []
+    for f in filters:
+        _urls.extend(u for u in urls if f in u)
+    urls = sorted(set(_urls))
+
 if "--slice" in sys.argv:
     index = sys.argv.index("--slice")
     _slice = sys.argv[index + 1]
     urls = eval(f"urls{_slice}")
 
-if "--url" in sys.argv:
-    index = sys.argv.index("--url")
-    url = sys.argv[index + 1]
-    urls = [u for u in urls if url in u]
-
+# url_filters = [
+#     "/auth/priv/getitem/",
+#     "/auth/user/del/",
+#     "/auth/group/del/",
+#     "/captiveportal/settings/delzone/",
+#     "/core/tunables/delitem/c5a7acc3-aef1-47d8-93f6-ebda09380936",
+#     "/cron/settings/deljob/",
+#     "/dhcrelay/settings/delrelay/",
+#     "/dhcrelay/settings/deldest/",
+#     "/diagnostics/lvtemplate/delitem/",
+#     "/dnsmasq/settings/delhost/",
+#     "/dnsmasq/settings/deldomain/",
+#     "/dnsmasq/settings/deltag/",
+#     "/dnsmasq/settings/delrange/",
+#     "/dnsmasq/settings/deloption/",
+#     "/dnsmasq/settings/delmatch/",
+#     "/dnsmasq/settings/delboot/",
+#     "/firewall/category/delitem/",
+#     "/firewall/filter/delrule/",
+#     "/firewall/group/delitem/",
+#     "/firewall/npt/delrule/",
+#     "/firewall/onetoone/delrule/",
+#     "/firewall/sourcenat/delrule/",
+#     "/firewall/alias/delitem/",
+#     "/firewall/alias/getgeoip",
+#     "/ids/settings/get",
+#     "/ids/settings/deluserrule/",
+#     "/ids/settings/delpolicy/",
+#     "/ids/settings/delpolicyrule/",
+#     "/ipsec/connections/getconnection/aa844964-35bd-4e6c-8bad-57df7aa5be8e",
+#     "/ipsec/connections/delconnection/aa844964-35bd-4e6c-8bad-57df7aa5be8e",
+#     "/ipsec/connections/dellocal/",
+#     "/ipsec/connections/delremote/",
+#     "/ipsec/connections/delchild/",
+#     "/ipsec/keypairs/delitem/",
+#     "/ipsec/manualspd/del/",
+#     "/ipsec/pools/del/",
+#     "/ipsec/presharedkeys/delitem/",
+#     "/ipsec/vti/del/",
+#     "/interfaces/gifsettings/delitem/",
+#     "/interfaces/gresettings/delitem/",
+#     "/interfaces/laggsettings/delitem/",
+#     "/interfaces/loopbacksettings/delitem/",
+#     "/interfaces/neighborsettings/delitem/",
+#     "/interfaces/vipsettings/delitem/",
+#     "/interfaces/vlansettings/delitem/",
+#     "/interfaces/vxlansettings/delitem/",
+#     "/kea/dhcpv4/get",
+#     "/kea/dhcpv4/delsubnet/",
+#     "/kea/dhcpv4/delreservation/",
+#     "/kea/dhcpv4/delpeer/",
+#     "/monit/settings/get",
+#     "/monit/settings/dirty",
+#     "/monit/settings/delalert/",
+#     "/monit/settings/getservice/edd58d19-13a8-494e-8856-120ee7bb7536",
+#     "/monit/settings/delservice/edd58d19-13a8-494e-8856-120ee7bb7536",
+#     "/monit/settings/deltest/0387014d-5608-4ca7-a97a-f248a02736d4",
+#     "/monit/settings/getgeneral",
+#     "/openvpn/clientoverwrites/del/",
+#     "/openvpn/instances/del/",
+#     "/openvpn/instances/delstatickey/",
+#     "/routes/routes/delroute/",
+#     "/routing/settings/delgateway/43f2b5c4-171c-4b1f-a7f1-5779bce2220d",
+#     "/syslog/settings/deldestination/",
+#     "/trafficshaper/settings/getpipe/7b5dc65b-fe98-4ae7-b51d-f91a25e21ee1",
+#     "/trafficshaper/settings/delpipe/7b5dc65b-fe98-4ae7-b51d-f91a25e21ee1",
+#     "/trafficshaper/settings/delqueue/b8f3c20d-2ae5-4187-89c2-02f54b9cc502",
+#     "/trafficshaper/settings/delrule/",
+#     "/trust/ca/del/",
+#     "/trust/cert/del/",
+#     "/unbound/settings/delforward/",
+#     "/unbound/settings/delhostoverride/",
+#     "/unbound/settings/delhostalias/",
+#     "/unbound/settings/delacl/",
+#     "/wireguard/client/delclient/",
+#     "/wireguard/server/delserver/"
+# ]
+# _urls = []
+# for uf in url_filters:
+#     _urls.extend(u for u in urls if uf in u)
+# urls = _urls
 
 log_path = f"{os.path.dirname(__file__)}/pytest.log"
 try:
@@ -79,6 +164,7 @@ def test_endpoint(url, spec, api, get_node: ElementFetcher):
 
         params = op.get("parameters", [])
         nodes = []
+        url_with_params = url
         if params:
             model = spec.components.schemas.get(model_name, {})
             xpath = model.get("x-config-xpath", None)
@@ -92,10 +178,10 @@ def test_endpoint(url, spec, api, get_node: ElementFetcher):
             for param in params:
                 value = attrib.get(param["name"]) or param["schema"].get("default")
                 if value:
-                    logger.info(f"replaced {param["name"]} with {value} in {url} from {param}")
-                    url = url.replace(f"{{{param["name"]}}}", str(value))
+                    # print(f"replaced {param["name"]} with {value} in {url} from {param}")
+                    url_with_params = url_with_params.replace(f"{{{param["name"]}}}", str(value))
 
-        response = api.call(method, url)
+        response = api.call(method, url_with_params)
         response_body = response.json()
 
         # if "errorMessage" in response_body:
@@ -130,6 +216,9 @@ def resolve_schema(schema: StrDict, components: StrDict): #-> Tuple[StrDict, str
         if model_path:
             breadcrumbs = model_path.split("/")
             for breadcrumb in breadcrumbs:
+                try:
+                    breadcrumb = int(breadcrumb)
+                except: pass
                 _schema = _schema[breadcrumb]
 
     for k, v in _schema.items():
