@@ -184,37 +184,11 @@ ARRAY_FIELD_TYPES = [
     "VTIField"
 ]
 
+
 SELECTED_VALUE_FIELD_TYPES = [
-    # "BaseListField",
-    # "GroupMembershipField",
-    # "MemberField",
-    # "PrivField",
-    # "AuthenticationServerField",
-    # "AuthGroupField",
-    # "CertificateField",
-    # "ConfigdActionsField",
-    # "CountryField",
-    # "InterfaceField",
-    # "JsonKeyValueStoreField",
-    # "ModelRelationField",
-    # "NetworkAliasField",
-    # "OptionField",
-    # "PortField",
-    # "ProtocolField",
-    # "VirtualIPField",
-    # "InterfaceField",
-    # "InterfaceField",
-    # "ScheduleField",
-    # "TosField",
-    # "PolicyContentField",
     "CharonLogLevelField",
-    # "IPsecProposalField",
-    # "PoolsField",
-    # "LaggInterfaceField",
-    # "VipInterfaceField",
-    # "VlanInterfaceField",
-    # "OpenVPNServerField",
-    # "UnboundInterfaceField",
+    "NetworkField",
+    "HostnameField",
 ]
 
 
@@ -375,19 +349,11 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
     is_primitive = not any(props)
     is_array = any(q for q in quals if q.name == "Multiple")
     is_array = is_array or (has_single_child and first_child.type in ARRAY_FIELD_TYPES)
-    is_selected_value_dict = node.type in SELECTED_VALUE_FIELD_TYPES
-
 
     if node.type == "ModelRelationField":
         if not (has_single_child and first_child.name == "Model"):
             raise ValueError(f"node {node.name} is expected to have a single child named Model")
         return get_relation_spec(first_child)
-
-    elif node.type in ("NetworkField", "HostnameField"):
-        spec = {
-            "type": "object",
-            "additionalProperties": get_enum_value_spec(),
-        }
 
     elif node.type == "OptionField":
         if not has_single_child:
@@ -400,7 +366,7 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
             "additionalProperties": False,
         }
 
-    elif is_selected_value_dict:
+    elif node.type in SELECTED_VALUE_FIELD_TYPES:
         spec = {
             "type": "object",
             "additionalProperties": get_enum_value_spec(),
