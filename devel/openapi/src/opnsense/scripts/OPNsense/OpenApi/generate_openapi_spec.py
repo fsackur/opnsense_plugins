@@ -415,7 +415,8 @@ def generate_openapi_spec(
 
     models = get_models(source_folder, json_path=model_json_path)
     model_names = set(ep.model for ep in endpoints)
-    models = [m for m in models if m.schema_path in model_names]
+    # model_names.union(["opnsense.auth.user", "opnsense.auth.group"])
+    # models = [m for m in models if m.schema_path in model_names]
 
     spec = get_spec(models, endpoints)
 
