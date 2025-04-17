@@ -9,6 +9,10 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
+            "args": [
+                "--source-folder",
+                "/gitroot/upstream/opnsense/core/src/opnsense/mvc/app/"
+            ],
             "cwd": "${fileDirname}",
             "justMyCode": false,
         },

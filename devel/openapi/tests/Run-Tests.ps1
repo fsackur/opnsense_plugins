@@ -11,7 +11,7 @@ if (-not ($NoRun -and (Test-Path $LogPath)))
 {
     Remove-Item $LogPath -ErrorAction Ignore
 
-    $_args = "test_api.py", "--tb=no"
+    $_args = "test_api.py", "--tb=no" #, "--rootdir", $PSScriptRoot
     if ($Slice)
     {
         $_args += "--slice", "[$($Slice -join ":")]"
