@@ -51,12 +51,12 @@ def memoise(func):
 generate_openapi_spec = memoise(_generate_openapi_spec)
 
 
-@fixture(autouse=True)
+@fixture(scope="session", autouse=True)
 def no_cert_warnings():
     urllib3.disable_warnings()
 
 
-class Config(TypedDict):
+class ClientConfig(TypedDict):
     source_folder: str
     base_url: str
     api_key: str
@@ -64,14 +64,14 @@ class Config(TypedDict):
 
 
 @fixture(scope="session")
-def config() -> Config:
+def client_config() -> ClientConfig:
     path = f"{os.path.dirname(__file__)}/config.json"
     try:
         with open(path) as file:
             config_json = file.read()
 
     except FileNotFoundError as ex:
-        default_config = {a: "" for a in Config.__annotations__.keys()}
+        default_config = {a: "" for a in ClientConfig.__annotations__.keys()}
         config_json = json.dumps(default_config, indent=4)
 
         with open(path, "w") as file:
@@ -84,8 +84,8 @@ def config() -> Config:
 
 
 @fixture(scope="session")
-def source_folder(config: Config):
-    return config["source_folder"]
+def source_folder(client_config: ClientConfig):
+    return client_config["source_folder"]
 
 
 @fixture(scope="session")
@@ -139,8 +139,8 @@ class Api:
 
 
 @fixture(scope="session")
-def api(config: Config):
-    return Api(**config)
+def api(client_config: ClientConfig, no_cert_warnings):
+    return Api(**client_config)
 
 
 from typing import *
@@ -175,7 +175,7 @@ def gm(_obj, props: Optional[List[str]]=None, show_dunder=False):
 
 
 @fixture(scope="session")
-def opnsense_config(api) -> XmlElement:
+def opnsense_config(api: Api) -> XmlElement:
     conf = api.get("/core/backup/download/this").text
     root = ElementTree.fromstring(conf)
     return root

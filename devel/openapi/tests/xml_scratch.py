@@ -21,67 +21,67 @@ import xml.etree.cElementTree as ET
 # print(e)
 
 
+file = "/home/freddie/gitroot/upstream/opnsense/core/src/opnsense/mvc/app/models/OPNsense/Auth/Group.xml"
+with open(file) as _file:
+    content = _file.read()
 
-paths = [
-    "./system/group",
-    "./system/user",
-    ".//OPNsense/captiveportal",
-    ".//system/firmware",
-    ".//hasync",
-    ".//sysctl",
-    ".//OPNsense/cron",
-    ".//OPNsense/DHCRelay",
-    ".//OPNsense/Firewall/Lvtemplate",
-    ".//OPNsense/Netflow",
-    "./dnsmasq",
-    ".//OPNsense/Firewall/Alias",
-    ".//OPNsense/Firewall/Category",
-    ".//OPNsense/Firewall/Filter",
-    "./ifgroups",
-    ".//OPNsense/IDS",
-    ".//OPNsense/IPsec",
-    ".//OPNsense/Swanctl",
-    "./gifs",
-    "./gres",
-    "./laggs",
-    ".//OPNsense/Interfaces/loopbacks",
-    ".//OPNsense/Interfaces/neighbors",
-    "./virtualip",
-    "./vlans",
-    ".//OPNsense/Interfaces/vxlans",
-    ".//OPNsense/Kea/ctrl_agent",
-    ".//OPNsense/Kea/dhcp4",
-    ".//OPNsense/monit",
-    ".//OPNsense/OpenVPNExport",
-    ".//OPNsense/OpenVPN",
-    ".//staticroutes",
-    ".//OPNsense/Gateways",
-    ".//OPNsense/Syslog",
-    ".//OPNsense/TrafficShaper",
-    "./ca",
-    "./cert",
-    ".//OPNsense/trust/general",
-    ".//OPNsense/unboundplus",
-    ".//OPNsense/wireguard/client",
-    ".//OPNsense/wireguard/general",
-    ".//OPNsense/wireguard/server"
-]
+# print(content)
+model = ET.fromstring(content)
+print(model)
 
-file = "config-opnshut.xml"
-config = ET.parse(file)
-
-for path in paths:
-    e = config.findall(path)
-    print(e)
+# mount_path = None
+# mount = model.find("mount")
 
 
-# ctxt = doc.xpathNewContext()
-# res = ctxt.xpathEval("//*")
-# if len(res) != 2:
-#     print "xpath query: wrong node set size"
-#     sys.exit(1)
-# if res[0].name != "doc" or res[1].name != "foo":
-#     print "xpath query: wrong node set value"
-#     sys.exit(1)
-# doc.freeDoc()
-# ctxt.xpathFreeContext()
+
+# paths = [
+#     "./system/group",
+#     "./system/user",
+#     ".//OPNsense/captiveportal",
+#     ".//system/firmware",
+#     ".//hasync",
+#     ".//sysctl",
+#     ".//OPNsense/cron",
+#     ".//OPNsense/DHCRelay",
+#     ".//OPNsense/Firewall/Lvtemplate",
+#     ".//OPNsense/Netflow",
+#     "./dnsmasq",
+#     ".//OPNsense/Firewall/Alias",
+#     ".//OPNsense/Firewall/Category",
+#     ".//OPNsense/Firewall/Filter",
+#     "./ifgroups",
+#     ".//OPNsense/IDS",
+#     ".//OPNsense/IPsec",
+#     ".//OPNsense/Swanctl",
+#     "./gifs",
+#     "./gres",
+#     "./laggs",
+#     ".//OPNsense/Interfaces/loopbacks",
+#     ".//OPNsense/Interfaces/neighbors",
+#     "./virtualip",
+#     "./vlans",
+#     ".//OPNsense/Interfaces/vxlans",
+#     ".//OPNsense/Kea/ctrl_agent",
+#     ".//OPNsense/Kea/dhcp4",
+#     ".//OPNsense/monit",
+#     ".//OPNsense/OpenVPNExport",
+#     ".//OPNsense/OpenVPN",
+#     ".//staticroutes",
+#     ".//OPNsense/Gateways",
+#     ".//OPNsense/Syslog",
+#     ".//OPNsense/TrafficShaper",
+#     "./ca",
+#     "./cert",
+#     ".//OPNsense/trust/general",
+#     ".//OPNsense/unboundplus",
+#     ".//OPNsense/wireguard/client",
+#     ".//OPNsense/wireguard/general",
+#     ".//OPNsense/wireguard/server"
+# ]
+
+# file = "config-opnshut.xml"
+# config = ET.parse(file)
+
+# for path in paths:
+#     e = config.findall(path)
+#     print(e)
