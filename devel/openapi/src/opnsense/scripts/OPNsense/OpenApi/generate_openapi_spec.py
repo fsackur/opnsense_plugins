@@ -26,7 +26,6 @@ from parse_xml_models import _DEFAULT_OUTPUT_FILE as _DEFAULT_MODEL_OUTPUT_FILE
 SchemaDict =  Dict[str, "SchemaDict | str | bool | List[str]"]
 
 
-
 BOOLEAN_SCHEMA = {
     "type": "integer",
     "enum": [0, 1],
@@ -168,6 +167,68 @@ SELECTED_VALUE_FIELD_TYPES = [
     # "OpenVPNServerField",
     # "UnboundInterfaceField",
 ]
+
+
+class ComponentRegistry:
+    _models: Dict[str, XmlModel] = {}
+    _components: Dict[str, SchemaDict] = BASE_SCHEMAS.copy()
+
+    @classmethod
+    def import_models(cls, models: List[XmlModel]):
+        for model in models:
+            cls._models[model.schema_path] = model
+
+    @classmethod
+    def register(cls, name: str) -> None:
+        if name not in cls._components:
+            model = cls._models[name]
+            schema = get_model_spec(model)
+            schema["x-config-xpath"] = model.mount  # type: ignore
+            cls._components[name] = schema
+
+    @classmethod
+    def get(cls, name: str) -> SchemaDict:
+        cls.register(name)
+        return cls._components[name]
+
+    @classmethod
+    def dump(cls) -> Dict[str, SchemaDict]:
+        keys = sorted(cls._components.keys())
+        return {k: cls._components[k] for k in keys}
+
+    @classmethod
+    def resolve_property_path(cls, component_name: str, model_property_path: str) -> str:
+        """Resolve a dot-dereference property path to a slash-separated component schema path"""
+        path = component_name
+        schema: SchemaDict = cls.get(component_name)
+
+        if not model_property_path:
+            return path
+
+        known_schema_props = "properties", "items", "additionalProperties"
+        breadcrumbs = model_property_path.split(".")
+        while breadcrumbs:
+            breadcrumb = breadcrumbs[0]
+
+            if breadcrumb in known_schema_props:
+                raise NotImplementedError(f"Need to handle searching for a property named '{breadcrumb}'")
+
+            prop_found = False
+            props_to_try = (breadcrumb, *known_schema_props)
+            for prop in props_to_try:
+                prop_found = prop in schema
+                if prop_found:
+                    schema = schema[prop]  # type: ignore
+                    path = f"{path}/{prop}"
+
+                    if prop == breadcrumb:
+                        breadcrumbs = breadcrumbs[1:]
+                    break
+
+            if not prop_found:
+                raise KeyError(f"could not find {breadcrumb} in {path}")
+
+        return path
 
 
 def get_enum_value_spec(text: str | None = None) -> SchemaDict:
@@ -317,30 +378,17 @@ def get_path_parameter_spec(param: Parameter) -> SchemaDict:
 def resolve_component_path(
     model: str | None,
     model_path_map: str | None,
-    component_schemas: Dict[str, Dict],
 ) -> Tuple[str | None, str | None]:
 
     client_prop = None
     component_path = model
 
     if model and model_path_map:
-        tree: Dict[str, Dict] = component_schemas.get(model)  # type: ignore
-
         client_prop, model_path = model_path_map.split(":", maxsplit=1)
-        breadcrumbs = model_path.split(".") if model_path else []
-
-        while breadcrumbs:
-            prop = breadcrumbs[0]
-            if "properties" in tree:
-                tree = tree["properties"][prop]
-                component_path = f"{component_path}/properties/{prop}"
-                breadcrumbs = breadcrumbs[1:]
-            elif "items" in tree:
-                tree = tree["items"]
-                component_path = f"{component_path}/items"
-                # still on the same breadcrumb; go round again
-            else:
-                raise KeyError(f"could not find {prop} in {component_path}")
+        component_path = ComponentRegistry.resolve_property_path(
+            component_name=model,
+            model_property_path=model_path,
+        )
 
     return client_prop, component_path
 
@@ -348,9 +396,8 @@ def resolve_component_path(
 def get_operation_content(
     model: str | None,
     model_path_map: str | None,
-    component_schemas: Dict[str, Dict],
 ) -> SchemaDict:
-    client_prop, component_path = resolve_component_path(model, model_path_map, component_schemas)
+    client_prop, component_path = resolve_component_path(model, model_path_map)
 
     if not component_path:
         schema: SchemaDict = {}
@@ -371,10 +418,10 @@ def get_operation_content(
     }
 
 
-def get_operation(endpoint: Endpoint, component_schemas: Dict[str, Dict]) -> SchemaDict:
+def get_operation(endpoint: Endpoint) -> SchemaDict:
     method = endpoint.method.lower()
 
-    content = get_operation_content(endpoint.response_model, endpoint.model_path_map, component_schemas)
+    content = get_operation_content(endpoint.response_model, endpoint.model_path_map)
     responses = {
         "200": {
             "description": endpoint.description,
@@ -391,7 +438,7 @@ def get_operation(endpoint: Endpoint, component_schemas: Dict[str, Dict]) -> Sch
         op["parameters"] = [get_path_parameter_spec(p) for p in endpoint.parameters]
 
     if method == "post":
-        content = get_operation_content(endpoint.request_model, endpoint.model_path_map, component_schemas)
+        content = get_operation_content(endpoint.request_model, endpoint.model_path_map)
         op["requestBody"] = {
             "required": endpoint.requires_body,
             "content": content,
@@ -408,16 +455,22 @@ def get_spec(models: List[XmlModel], endpoints: List[Endpoint]) -> APISpec:
         info={"description": "API for managing your OPNsense firewall"},
     )
 
-    for name, schema in BASE_SCHEMAS.items():
-        spec.components.schema(name, schema)
+    ComponentRegistry.import_models(models)
 
-    for model in models:
-        component = get_model_spec(model)
-        component["x-mount"] = model.mount  # type: ignore
-        spec.components.schema(model.schema_path, component)
+    model_names = set()
+    for ep in endpoints:
+        model_names.add(ep.response_model)
+        model_names.add(ep.request_model)
+    for name in model_names:
+        if name:
+            ComponentRegistry.register(name)
+
+    components = ComponentRegistry.dump()
+    for name, component in components.items():
+        spec.components.schema(name, component)
 
     for endpoint in endpoints:
-        operation = get_operation(endpoint, spec.components.schemas)
+        operation = get_operation(endpoint)
         spec.path(path=endpoint.path, description=endpoint.description, operations=operation)
 
     return spec
@@ -470,7 +523,7 @@ def test_spec(models: List[XmlModel], endpoints: List[Endpoint]):
                 break
 
         for endpoint in eps:
-            operation = get_operation(endpoint, spec.components.schemas)
+            operation = get_operation(endpoint)
             spec.path(path=endpoint.path, description=endpoint.description, operations=operation)
         try:
             validate_spec(spec)
@@ -502,11 +555,6 @@ def generate_openapi_spec(
         endpoints = [ep for ep in endpoints if ep.controller.lower() == controller.lower()]
 
     models = get_models(source_folder, json_path=model_json_path)
-    model_names = set()
-    for ep in endpoints:
-        model_names.add(ep.response_model)
-        model_names.add(ep.request_model)
-    models = [m for m in models if m.schema_path in model_names]
 
     spec = get_spec(models, endpoints)
 
