@@ -96,8 +96,8 @@ def load_spec_from_file() -> APISpec:
     return load_openapi_spec("openapi.yml")
 
 
-# spec = load_spec_from_file #if "--yaml" in sys.argv else generate_spec
-spec = generate_spec
+spec = load_spec_from_file if "--yaml" in sys.argv else generate_spec
+# spec = generate_spec
 
 
 @fixture

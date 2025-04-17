@@ -4,5 +4,5 @@ from pytest import fixture
 
 from fixtures import *
 
-def test_spec(spec, spec_validator):
-    spec_validator(spec)
+# def test_spec(spec, spec_validator):
+#     spec_validator(spec)

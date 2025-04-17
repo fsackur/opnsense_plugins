@@ -24,11 +24,20 @@ StrDict = Dict[str, Any]
 # urls = list(_spec._paths.keys())
 # urls = [u for u in urls if not "firmware" in u]
 
-urls = urls[0:2]
+if "--slice" in sys.argv:
+    index = sys.argv.index("--slice")
+    _slice = sys.argv[index + 1]
+    urls = eval(f"urls{_slice}")
+
+if "--url" in sys.argv:
+    index = sys.argv.index("--url")
+    url = sys.argv[index + 1]
+    urls = [u for u in urls if url in u]
+
 
 import logging
 logger = logging.getLogger("api_tests")
-handler = logging.FileHandler("log.txt")
+handler = logging.FileHandler("pytest.log")
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
@@ -60,37 +69,35 @@ def test_endpoint(url, spec, api):
         # schema = {"$ref": '#/components/schemas/opnsense.auth.priv'}
         schema = resolve_schema(schema, spec.components.schemas)
         response = api.call(method, url)
-        # response.raise_for_status()
-        # response_body = {
-        #     "priv": {
-        #         "users": {
-        #             "8f9fbebf-b918-443f-9ea2-4faf264ac1b0": {"value": "freddie", "selected": 0},
-        #             "788305db-e7db-4241-9eb6-51631c6aa616": {"value": "root", "selected": 0},
-        #         },
-        #         "groups": {
-        #             "9172be89-d270-48b6-9482-e7925b4a3ce7": {"value": "admins", "selected": 0}
-        #         },
-        #     }
-        # }
         response_body = response.json()
-        print(response_body)
-        print(schema)
+        print(f"=== {url} ===")
+        print(f"response = {response_body}")
+        print(f"schema = {schema}")
         try:
             validate(response_body, schema)
             logger.info(f"{url}: pass")
         except Exception as ex:
             logger.error(f"{url}: {ex.__class__.__name__}: {ex.args[0]}")
+            raise
 
 
 def resolve_schema(schema: StrDict, components: StrDict) -> StrDict:
-    _schema = {}
-    ref: str | None = schema.get("$ref", None)
+    _schema = schema.copy()
+    ref: str | None = _schema.pop("$ref", None)
     if ref is not None:
-        model_name = ref.replace("#/components/schemas/", "").split("/", maxsplit=1)[0]
+        model_parts = ref.replace("#/components/schemas/", "")
+        if "/" in model_parts:
+            model_name, model_path = model_parts.split("/", maxsplit=1)
+        else:
+            model_name, model_path = model_parts, None
+
         _schema = components[model_name]
-    for k, v in schema.items():
-        if k == "$ref":
-            continue
+        if model_path:
+            breadcrumbs = model_path.split("/")
+            for breadcrumb in breadcrumbs:
+                _schema = _schema[breadcrumb]
+
+    for k, v in _schema.items():
         if isinstance(v, Mapping):
             v = resolve_schema(v, components)
         _schema[k] = v
