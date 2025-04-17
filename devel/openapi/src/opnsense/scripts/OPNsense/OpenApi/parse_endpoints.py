@@ -12,7 +12,7 @@ import pathlib
 import argparse
 import re
 import subprocess
-from typing import Any, Dict, List, Literal, Self, TypeAlias, TypedDict
+from typing import Any, Dict, List, Literal, Self, TypeAlias, TypedDict, Tuple
 from pydantic import BaseModel
 
 from parse_xml_models import get_openapi_schema_path, _DEFAULT_SOURCE_FOLDER
@@ -30,14 +30,17 @@ class PhpParameter(TypedDict):
     has_default: bool
     default: Any
 
-class PhpMethod(TypedDict):
+class ModelDict(TypedDict):
+    request_model: str | None
+    response_model: str | None
+
+class PhpMethod(ModelDict):
     name: str
     method: HttpMethod
     parameters: List[PhpParameter]
     doc: str | Literal[False]
     requires_body: bool
     model_path_map: str | None
-    model_override: str | None
 
 class PhpController(TypedDict):
     name: str
@@ -49,8 +52,6 @@ class PhpController(TypedDict):
 #endregion DTOs from ParseControllers.php
 
 
-#region intermediate DTOs
-# These do validation and throw nice errors. The errors are why they exist.
 class DocComment(BaseModel):
     description: str
     param_descriptions: Dict[str, str]
@@ -91,76 +92,6 @@ class Parameter(BaseModel):
         return self.name
 
 
-class Method(BaseModel):
-    description: str
-    name: str
-    method: HttpMethod
-    parameters: List[Parameter]
-    requires_body: bool
-    model_path_map: str | None
-    model: str | None
-
-
-class Controller(BaseModel):
-    name: str
-    description: str
-    methods: List[Method]
-    is_abstract: bool
-
-
-def parse_php_controller(ctrl: PhpController) -> Controller:
-
-    model_name = ctrl["model_name"]
-    methods = []
-    php_methods = ctrl["methods"]
-    for php_method in php_methods:
-
-        model = php_method["model_override"] or ctrl["model"]
-        if model and "\\" in model:
-            vendor, _module, name = model.split("\\")
-            model = get_openapi_schema_path(vendor, _module, name)
-
-        model_path_map = php_method["model_path_map"]
-        if model_path_map and "static::$internalModelName" in model_path_map:
-            if not model_name:
-                raise ValueError(f"{ctrl["name"]}.{php_method["name"]}Action does not declare $internalModelName")
-            model_path_map = model_path_map.replace("static::$internalModelName", model_name)
-        elif model_name and not model_path_map:
-            model_path_map = model_name + ":"
-
-        doc = php_method.get("doc") or ""
-        comment = DocComment.from_php(doc)
-        param_descr = comment.param_descriptions
-
-        params = []
-        for php_param in php_method["parameters"]:
-            description = param_descr.get(php_param["name"], "")
-            param = Parameter(
-                description=description,
-                **php_param,
-            )
-            params.append(param)
-
-        method = Method(
-            description=comment.description,
-            name=php_method["name"],
-            method=php_method["method"],
-            parameters=params,
-            requires_body=php_method["requires_body"],
-            model_path_map=model_path_map,
-            model=model,
-        )
-        methods.append(method)
-
-    return Controller(
-        name=ctrl["name"],
-        description=ctrl["doc"] or "",  # TODO
-        methods=methods,
-        is_abstract=ctrl["is_abstract"],
-    )
-#endregion intermediate DTOs
-
-
 class Endpoint(BaseModel):
     """
     In OpenApi terms, this is an "operation", but "endpoint" seems more descriptive.
@@ -178,7 +109,8 @@ class Endpoint(BaseModel):
     name: str
     method: HttpMethod
     parameters: List[Parameter]
-    model: str | None
+    request_model: str | None
+    response_model: str | None
     requires_body: bool
     model_path_map: str | None
 
@@ -197,7 +129,64 @@ class Endpoint(BaseModel):
         return self.path
 
 
-def get_controllers(source_folder: str) -> List[Controller]:
+def get_controller_url_segments(class_name: str) -> Tuple[str, str]:
+    """Expects, e.g. OPNsense\\Proxy\\Api\\AclController"""
+    segments = class_name.split("\\")
+    return segments[-3], segments[-1].replace("Controller", "")
+
+
+def parse_endpoints(ctrl: PhpController) -> List[Endpoint]:
+
+    endpoints = []
+    model_name = ctrl["model_name"]
+    module, controller_name = get_controller_url_segments(ctrl["name"])
+
+    php_methods = ctrl["methods"]
+    for php_method in php_methods:
+        models: ModelDict = {}  # type: ignore
+
+        for key in ("request_model", "response_model"):
+            model = php_method[key] or ctrl["model"]
+            if model and "\\" in model:
+                vendor, _module, name = model.split("\\")
+                model = get_openapi_schema_path(vendor, _module, name)
+            models[key] = model
+
+        model_path_map = php_method["model_path_map"]
+        if model_path_map and "static::$internalModelName" in model_path_map:
+            if not model_name:
+                raise ValueError(f"{ctrl["name"]}.{php_method["name"]}Action does not declare $internalModelName")
+            model_path_map = model_path_map.replace("static::$internalModelName", model_name)
+        elif model_name and not model_path_map:
+            model_path_map = model_name + ":"
+
+        doc = php_method.get("doc") or ""
+        comment = DocComment.from_php(doc)
+        param_descr = comment.param_descriptions
+
+        params = []
+        for php_param in php_method["parameters"]:
+            description = param_descr.get(php_param["name"], "")
+            param = Parameter(description=description, **php_param)
+            params.append(param)
+
+        endpoint = Endpoint(
+            description=comment.description,
+            module=module,
+            controller=controller_name,
+            name=php_method["name"],
+            method=php_method["method"],
+            parameters=params,
+            **models,
+            requires_body=php_method["requires_body"],
+            model_path_map=model_path_map,
+        )
+        endpoints.append(endpoint)
+
+    return endpoints
+
+
+def get_controllers(source_folder: str) -> List[PhpController]:
     """Call ParseControllers.php"""
 
     script_dir = os.path.dirname(__file__)
@@ -208,33 +197,8 @@ def get_controllers(source_folder: str) -> List[Controller]:
         print(php_result.stdout.decode())
         raise subprocess.SubprocessError(php_result.stderr.decode())
 
-    php_controllers = json.loads(php_result.stdout)
-    controllers = []
-    for ctrl in php_controllers:
-        if not ctrl["is_abstract"]:
-            controllers.append(parse_php_controller(ctrl))
-    return controllers
-
-
-def get_controller_url_segments(class_name: str):
-    """Expects, e.g. OPNsense\\Proxy\\Api\\AclController"""
-    segments = class_name.split("\\")
-    return segments[-3], segments[-1].replace("Controller", "")
-
-
-def parse_endpoints(controller: Controller) -> List[Endpoint]:
-    module, controller_name = get_controller_url_segments(controller.name)
-
-    endpoints = []
-    for method in controller.methods:
-        endpoint = Endpoint(
-            module=module,
-            controller=controller_name,
-            **method.dict(),
-        )
-        endpoints.append(endpoint)
-
-    return endpoints
+    php_controllers: List[PhpController] = json.loads(php_result.stdout)
+    return [ctrl for ctrl in php_controllers if not ctrl["is_abstract"]]
 
 
 def get_endpoints(source_folder=_DEFAULT_SOURCE_FOLDER, json_path: str | None = None) -> List[Endpoint]:
