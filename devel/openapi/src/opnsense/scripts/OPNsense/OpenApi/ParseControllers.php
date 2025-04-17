@@ -72,12 +72,14 @@ class Method {
     public $doc;
     public $requires_body;
     public $model_path_map;
-    public $model_override;
+    public $request_model;
+    public $response_model;
 
     public function __construct(ReflectionMethod $rmethod, string $src)
     {
         $name = preg_replace("/Action\$/", "", $rmethod->name);
-        $model_override = null;
+        $request_model = null;
+        $response_model = null;
 
         // Presence in source code of, e.g., "this->request->getPost(" implies POST.
         // See comment in Controller ctor.
@@ -115,10 +117,12 @@ class Method {
             $args = preg_split("/,\s*/", trim(array_slice($matches[3], -1)[0]));
 
             if (in_array($base_method, ["searchBase", "searchRecordsetBase"])) {
-                $model_override = "search";
-                $model_path_map = ":";
+                $request_model = "search.request";
+                $response_model = "search.response";
             } elseif (in_array($base_method, ["addBase", "setBase", "getBase"])) {
                 $model_path_map = $args[0] . ":" . $args[1];
+            } elseif (in_array($base_method, ["toggleBase", "delBase"])) {
+                $response_model = "result";
             } elseif ($base_method === "request->getPost") {
                 $model_path_map = $args[0] . ":";
             } else {
@@ -153,7 +157,8 @@ class Method {
         $this->doc = $doc;
         $this->requires_body = $requires_body;
         $this->model_path_map = $model_path_map;
-        $this->model_override = $model_override;
+        $this->request_model = $request_model;
+        $this->response_model = $response_model;
     }
 }
 
@@ -263,13 +268,15 @@ class Controller {
         }
 
         if ($name == "OPNsense\\Base\\ApiMutableModelControllerBase") {
-            $methods["set"]->model_override = "result";
+            $methods["set"]->response_model = "result";
         } elseif ($name == "OPNsense\\Base\\ApiMutableServiceControllerBase") {
-            $methods["start"]->model_override = "response";
-            $methods["stop"]->model_override = "response";
-            $methods["restart"]->model_override = "response";
-            $methods["reconfigure"]->model_override = "status";
-            $methods["status"]->model_override = "status";
+            $methods["start"]->response_model = "response";
+            $methods["stop"]->response_model = "response";
+            $methods["restart"]->response_model = "response";
+            $methods["reconfigure"]->response_model = "status";
+            $methods["status"]->response_model = "status";
+        } elseif ($name == "OPNsense\\Monit\\Api\\SettingsController") {
+            $methods["getGeneral"]->model_path_map = "monit:general";
         }
 
         $this->methods = array_values($methods);
