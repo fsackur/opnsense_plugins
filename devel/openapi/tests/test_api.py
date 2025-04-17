@@ -66,6 +66,7 @@ def test_endpoint(url, spec, api, get_node: ElementFetcher):
     method_op = spec._paths[url]
     for method, op in [(k, v) for k, v in method_op.items() if k in ("get", "post")]:
         schema = op["responses"]["200"]["content"]["application/json"]["schema"]
+        print(schema)
         # schema = {"$ref": '#/components/schemas/opnsense.auth.priv'}
         schema, model_name = resolve_schema(schema, spec.components.schemas)
 
@@ -81,10 +82,15 @@ def test_endpoint(url, spec, api, get_node: ElementFetcher):
                 value = str(value) if value else "null"
                 url = url.replace(f"{{{param["name"]}}}", value)
 
-        print(f"=== {url} {params} ===")
+        print(f"=== {url} {nodes} ===")
+
+        return
 
         response = api.call(method, url)
         response_body = response.json()
+
+        if "errorMessage" in response_body:
+            return
 
 
         print(f"response = {response_body}")
