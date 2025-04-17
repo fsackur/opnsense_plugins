@@ -23,7 +23,7 @@ from parse_xml_models import XmlModel, XmlNode, get_models, _DEFAULT_SOURCE_FOLD
 from parse_xml_models import _DEFAULT_OUTPUT_FILE as _DEFAULT_MODEL_OUTPUT_FILE
 
 
-SchemaDict =  Dict[str, "SchemaDict | str | int | bool | List[str | int | SchemaDict]"]
+SchemaDict =  Dict[str, "SchemaDict | str | bool | List[str | int]"]
 
 K = TypeVar("K")
 V = TypeVar("V")
@@ -192,12 +192,6 @@ SELECTED_VALUE_FIELD_TYPES = [
 ]
 
 
-OPERATION_ADDITIONAL_PROPERTIES_BY_PATH = {
-    "AuthPrivGetItem": {"": "id"},
-    "MonitSettingsDirty": {"": "dirty"},
-}
-
-
 class ComponentRegistry:
     _models: Dict[str, XmlModel] = {}
     _components: Dict[str, SchemaDict] = BASE_SCHEMAS.copy()
@@ -234,7 +228,7 @@ class ComponentRegistry:
         if not model_property_path:
             return path
 
-        known_schema_props = "properties", "items", "additionalProperties", "oneOf"
+        known_schema_props = "properties", "items", "additionalProperties"
         breadcrumbs = model_property_path.split(".")
         while breadcrumbs:
             breadcrumb = breadcrumbs[0]
@@ -252,9 +246,6 @@ class ComponentRegistry:
 
                     if prop == breadcrumb:
                         breadcrumbs = breadcrumbs[1:]
-                    elif prop == "oneOf":
-                        schema = schema[0]  # type: ignore
-                        path = f"{path}/0"
                     break
 
             if not prop_found:
@@ -324,21 +315,6 @@ def get_relation_spec(node: XmlNode) -> SchemaDict:
     }
     return spec
 
-
-def get_associative_array_spec(value_schema: SchemaDict) -> SchemaDict:
-    return {
-        "oneOf": [
-            {
-                "type": "array",
-                "items": value_schema,
-                "maxItems": 0,
-            },
-            {
-                "type": "object",
-                "additionalProperties": value_schema,
-            },
-        ]
-    }
 
 def get_model_spec(node: XmlNode) -> SchemaDict:
     """
@@ -410,7 +386,10 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
         }
 
     if is_array:
-        spec = get_associative_array_spec(spec)
+        spec = {
+            "type": "array",
+            "items": spec,
+        }
 
     return spec
 
