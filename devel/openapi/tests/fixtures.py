@@ -116,6 +116,8 @@ class Api:
     def _request_kwargs(self, url, path_params: Dict = {}, data: Dict | None = None):
         for k, v in path_params.items():
             url = url.replace(f"{{{k}}}", str(v))
+        if "{" in url:
+            raise ValueError(f"Unreplaced param in {url}")
 
         url = re.sub(r"//|/$", "", url)
 
