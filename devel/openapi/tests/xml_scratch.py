@@ -1,10 +1,12 @@
 #! /usr/bin/env python3
 
-# import libxml2
-import xml.etree.cElementTree as ET
+import os
+from io import StringIO, BufferedIOBase, BytesIO
+from xml.etree.ElementTree import ElementTree, XML
+# import xml.etree.cElementTree as ElementTree
 
 # file = "/home/freddie/gitroot/upstream/opnsense/core/src/opnsense/mvc/app/models/OPNsense/Auth/Group.xml"
-# model = ET.parse(file)
+# model = ElementTree.parse(file)
 
 # mount_path = None
 # mount = model.find("mount")
@@ -16,7 +18,7 @@ import xml.etree.cElementTree as ET
 # print(mount_path)
 
 # file = "config-opnshut.xml"
-# config = ET.parse(file)
+# config = ElementTree.parse(file)
 # e = config.findall(mount_path)
 # print(e)
 
@@ -24,64 +26,38 @@ import xml.etree.cElementTree as ET
 file = "/home/freddie/gitroot/upstream/opnsense/core/src/opnsense/mvc/app/models/OPNsense/Auth/Group.xml"
 with open(file) as _file:
     content = _file.read()
+# root = ElementTree.fromstring(content)
+root = XML(content)
+print(root)
 
-# print(content)
-model = ET.fromstring(content)
-print(model)
+for xpath in [
+    ".//items/group/name/Mask",
+    # ".//items/servers/server/gateway",
+    # ".//items/servers/server/carp_depend_on",
+    # ".//items/servers/server/peers/Model",
+]:
+    node = ElementTree(root.find(xpath))
+    # stream = StringIO()
+    stream = BytesIO()
+    # print(stream.write("foo"))
+    node.write(stream)
+    stream.seek(0)
+    print(stream.read().decode())
 
-# mount_path = None
-# mount = model.find("mount")
+# source_folder = "/gitroot/upstream/opnsense/core/src/opnsense/"
+# model_source_folder = None
+# for root, _, files in os.walk(source_folder, topdown=True, followlinks=True):
+#     path_segments = root.split("/")
+#     if path_segments[-1] != "models" or path_segments[-3] == "tests": continue
+#     model_source_folder = root
+
+# if not model_source_folder:
+#     raise FileNotFoundError(f"models not found in {source_folder}")
 
 
-
-# paths = [
-#     "./system/group",
-#     "./system/user",
-#     ".//OPNsense/captiveportal",
-#     ".//system/firmware",
-#     ".//hasync",
-#     ".//sysctl",
-#     ".//OPNsense/cron",
-#     ".//OPNsense/DHCRelay",
-#     ".//OPNsense/Firewall/Lvtemplate",
-#     ".//OPNsense/Netflow",
-#     "./dnsmasq",
-#     ".//OPNsense/Firewall/Alias",
-#     ".//OPNsense/Firewall/Category",
-#     ".//OPNsense/Firewall/Filter",
-#     "./ifgroups",
-#     ".//OPNsense/IDS",
-#     ".//OPNsense/IPsec",
-#     ".//OPNsense/Swanctl",
-#     "./gifs",
-#     "./gres",
-#     "./laggs",
-#     ".//OPNsense/Interfaces/loopbacks",
-#     ".//OPNsense/Interfaces/neighbors",
-#     "./virtualip",
-#     "./vlans",
-#     ".//OPNsense/Interfaces/vxlans",
-#     ".//OPNsense/Kea/ctrl_agent",
-#     ".//OPNsense/Kea/dhcp4",
-#     ".//OPNsense/monit",
-#     ".//OPNsense/OpenVPNExport",
-#     ".//OPNsense/OpenVPN",
-#     ".//staticroutes",
-#     ".//OPNsense/Gateways",
-#     ".//OPNsense/Syslog",
-#     ".//OPNsense/TrafficShaper",
-#     "./ca",
-#     "./cert",
-#     ".//OPNsense/trust/general",
-#     ".//OPNsense/unboundplus",
-#     ".//OPNsense/wireguard/client",
-#     ".//OPNsense/wireguard/general",
-#     ".//OPNsense/wireguard/server"
-# ]
-
-# file = "config-opnshut.xml"
-# config = ET.parse(file)
-
-# for path in paths:
-#     e = config.findall(path)
-#     print(e)
+# for root, _, files in os.walk(source_folder, topdown=True, followlinks=True):
+    # file = "/home/freddie/gitroot/upstream/opnsense/core/src/opnsense/mvc/app/models/OPNsense/Auth/Group.xml"
+    # with open(file) as _file:
+    #     content = _file.read()
+    # root = ElementTree.fromstring(content)
+    # print(root)
