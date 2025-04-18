@@ -114,7 +114,13 @@ class Api:
         self.base_url = base_url
         self.auth = HTTPBasicAuth(api_key, api_secret)
 
-    def _request_kwargs(self, url, data: Dict | None = None):
+    def _request_kwargs(self, url, path_params: Dict = {}, data: Dict | None = None):
+        for k, v in path_params.items():
+            url = url.replace(f"{{{k}}}", str(v))
+
+        url = re.sub(r"//|/$", "", url)
+        print(f"URL with params: {url}")
+
         kwargs: Dict[str, Any] = {
             "url": f"{self.base_url}{url}" if url.startswith("/") else f"{self.base_url}/{url}",
             "auth": self.auth,
@@ -124,12 +130,12 @@ class Api:
             kwargs["data"] = data
         return kwargs
 
-    def get(self, url):
-        kwargs = self._request_kwargs(url)
+    def get(self, url, path_params: Dict = {}):
+        kwargs = self._request_kwargs(url, path_params)
         return requests.get(**kwargs)
 
-    def post(self, url, data: Dict | None = None):
-        kwargs = self._request_kwargs(url, data)
+    def post(self, url, path_params: Dict = {}, data: Dict | None = None):
+        kwargs = self._request_kwargs(url, path_params, data)
         return requests.post(**kwargs)
 
     def call(self, method: HttpMethod, *args, **kwargs):
@@ -176,7 +182,14 @@ def gm(_obj, props: Optional[List[str]]=None, show_dunder=False):
 
 @fixture(scope="session")
 def opnsense_config(api: Api) -> XmlElement:
-    conf = api.get("/core/backup/download/this").text
+    path = f"{os.path.dirname(__file__)}/config.xml"
+    if os.path.exists(path):
+        with open(path) as file:
+            conf = file.read()
+    else:
+        conf = api.get("/core/backup/download/this").text
+        with open(path, "w") as file:
+            file.write(conf)
     root = ElementTree.fromstring(conf)
     return root
 
