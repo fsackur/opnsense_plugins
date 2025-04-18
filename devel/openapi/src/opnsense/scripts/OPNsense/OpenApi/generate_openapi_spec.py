@@ -78,6 +78,7 @@ class LazyDictionary(Generic[K, V]):
 BOOLEAN_SCHEMA: SchemaDict = {
     "type": "integer",
     "enum": [0, 1],
+    "description": "boolean",
 }
 
 
@@ -259,7 +260,7 @@ def get_selected_value_spec(node: XmlNode) -> SchemaDict:
         "type": "object",
         "properties": {
             "value": {"type": "string"},
-            "selected": BOOLEAN_SCHEMA,
+            "selected": BOOLEAN_SCHEMA.copy(),
         },
         "required": ["value", "selected"],
         "additionalProperties": False,
@@ -312,9 +313,7 @@ def get_relation_spec(node: XmlNode) -> SchemaDict:
             "type": "object",
             "properties": {
                 "value": schema,
-                "selected": {
-                    "type": "integer",  # TODO: 0 or 1
-                },
+                "selected": BOOLEAN_SCHEMA.copy(),
             },
             "additionalProperties": False,
         },
@@ -336,25 +335,22 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
     spec: SchemaDict
     _props: SchemaDict
 
-    allow_additional = False
-
     props: List[XmlNode] = []
-    quals: List[XmlNode] = []
+    quals: Dict[str, XmlNode] = {}
     for child in node.children:
         is_qual = child.name in QUALIFIERS
-        is_qual = is_qual or (node.type == "LegacyLinkField" and child.name == "Source")
         if is_qual:
-            quals.append(child)
-            if child.name == "AllowDynamic":
-                allow_additional = True
-        else:
-            props.append(child)
+            quals[child.name] = child
+
+        if is_qual or (node.type == "LegacyLinkField" and child.name == "Source"):
+            continue
+        props.append(child)
 
     has_single_child = len(props) == 1
     first_child: XmlNode = (props or [None])[0]  # type: ignore
 
     is_primitive = not any(props)
-    is_array = any(q for q in quals if q.name == "Multiple")
+    is_array = "Multiple" in quals
     is_array = is_array or (has_single_child and first_child.type in ARRAY_FIELD_TYPES)
 
     if node.type == "ModelRelationField":
@@ -381,18 +377,40 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
             "x-xpath": node.xpath,
         }
 
+    elif node.type == "BooleanField":
+        spec = BOOLEAN_SCHEMA.copy()
+
     elif is_primitive:
+        if node.type == "NumericField":
+            _type = "number"
+        elif node.type == "IntegerField":
+            _type = "integer"
+        else:
+            _type = "string"
         spec = {
-            "type": "string",
+            "type": _type,
             "x-xpath": node.xpath,
         }
+
+        mask = quals.get("Mask")
+        if mask and mask.value:
+            spec["pattern"] = mask.value
+        _min = quals.get("MinimumValue")
+        if _min and _min.value:
+            spec["minimum"] = _min.value
+        _max = quals.get("MaximumValue")
+        if _max and _max.value:
+            spec["maximum"] = _max.value
+        _default = quals.get("Default", quals.get("default"))
+        if _default and _default.value:
+            spec["default"] = _default.value if spec["type"] == "string" else int(_default.value)
 
     else:
         _props = {prop.name: get_model_spec(prop) for prop in props}
         spec = {
             "type": "object",
             "properties": _props,
-            "additionalProperties": allow_additional,
+            "additionalProperties": "AllowDynamic" in quals,
             "x-xpath": node.xpath,
         }
 
