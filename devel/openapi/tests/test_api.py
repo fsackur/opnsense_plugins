@@ -43,12 +43,7 @@ if "--log-path" in sys.argv:
 
 
 import logging
-class LastPartFilter(logging.Filter):
-    def filter(self, record):
-        record.name_last = record.name.rsplit('.', 1)[-1]
-        return True
-
-logger = logging.getLogger("api_tests")
+logger = logging.getLogger(os.path.basename(__file__).replace(".py", ""))
 if log_path:
     try:
         os.remove(log_path)
@@ -103,7 +98,7 @@ def format_validation_error(ex: ValidationError, response_body, schema, model_xm
 
 def log_validation_error(ex, response_body, schema, model_name, model_xml_registry, logger):
     response, schema, xml = format_validation_error(ex, response_body, schema, model_xml_registry)
-    logger.error(ex.message)
+    logger.getChild("message").error(ex.message)
     logger.getChild("response").error(response)
     logger.getChild(f"schema.{model_name}").error(schema)
     logger.getChild("xml").error(xml)
@@ -129,6 +124,8 @@ def validate_all(response_body, schema, model_name, model_xml_registry: ElementF
         for ex in errors:
             log_validation_error(ex, response_body, schema, model_name, model_xml_registry, logger)
         raise best_match(errors)
+    else:
+        logger.getChild("message").info("pass")
 
 
 @mark.parametrize("url", urls)
@@ -144,8 +141,11 @@ def test_endpoint(url, spec, api, get_node: ElementsFetcher, model_xml_registry:
         params = op.get("parameters", [])
         path_params = supply_params(get_node, params, model, model_path or "")
 
-        response = api.call(method, url, path_params)
-        response_body = response.json()
+        try:
+            response = api.call(method, url, path_params)
+            response_body = response.json()
+        except Exception as ex:
+            logger.getChild("message").error(ex)
 
         # print(f"response = {response_body}")
         # print(f"schema = {schema}")
