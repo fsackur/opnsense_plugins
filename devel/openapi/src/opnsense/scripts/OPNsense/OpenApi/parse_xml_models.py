@@ -86,26 +86,31 @@ def parse_xml_file(xml_file: str) -> XmlModel:
         raise ValueError("items tag not found")  # never happens; just appeases the linter
 
     mount = tree.find("mount")
+    mount_path = ""
     if mount is not None:
-        mount_path = mount.text
+        mount_path = mount.text or ""
         if mount_path and mount_path != ":memory:":
             mount_path = f".{mount_path.replace("+", "")}"
-        else:
-            mount_path = None
 
-    xml_model = _walk_xml(items)
-    return XmlModel(**xml_model.dict(), schema_path=schema_path, mount=mount_path)
+    xml_model = _walk_xml(items, xml_path=".")
+    return XmlModel(**xml_model.dict(), schema_path=schema_path)
 
 
 def get_model_xml_files(source_folder: str) -> List[str]:
     """Finds paths of model XML files within mvc/app/models"""
+    source_folder = os.path.normpath(source_folder)
     found = []
-    for root, _, files in os.walk(source_folder, topdown=True, followlinks=True):
-        path_segments = root.split("/")
-        if path_segments[-3] != "models":  # seems consistent as of v25.1
-            continue
-        xml_files = [os.path.join(root, f) for f in files if f.endswith(".xml")]
-        found.extend(xml_files)
+    if os.path.isdir(source_folder):
+        for root, _, files in os.walk(source_folder, topdown=True, followlinks=True):
+            path_segments = root.split("/")
+            if path_segments[-3] != "models":  # seems consistent as of v25.1
+                continue
+            xml_files = [os.path.join(root, f) for f in files if f.endswith(".xml")]
+            found.extend(xml_files)
+    elif os.path.isfile(source_folder) and source_folder.endswith(".xml"):
+        found.append(source_folder)
+    else:
+        raise ValueError(f"{source_folder} is not a directory or XML file. Specify a source folder containing XML model files.")
     return found
 
 
@@ -146,9 +151,6 @@ if __name__ == "__main__":
     source_folder = args.source_folder
     output_file = os.path.realpath(args.output_file) if args.output_file else None
     quiet = args.quiet
-
-    if not os.path.isdir(source_folder):
-        raise ValueError(f"{source_folder} is not a directory. Specify a source folder containing XML model files.")
 
     models = get_models(source_folder, json_path=output_file)
 
