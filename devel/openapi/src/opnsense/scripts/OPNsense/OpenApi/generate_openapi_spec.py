@@ -12,7 +12,7 @@ import argparse
 import os
 import pathlib
 from collections import defaultdict
-from typing import Any, Dict, List, Literal, Tuple, TypeAlias, Callable, Generic, TypeVar
+from typing import Any, Dict, List, Literal, Tuple, TypeAlias, Callable, Generic, TypeVar, cast
 
 import openapi_spec_validator as oasv
 from apispec import APISpec
@@ -206,7 +206,7 @@ class ComponentRegistry:
         if name not in cls._components:
             model = cls._models[name]
             schema = get_model_spec(model)
-            schema["x-config-xpath"] = model.mount  # type: ignore
+            schema["x-config-xpath"] = model.mount_path  # type: ignore
             cls._components[name] = schema
 
     @classmethod
@@ -254,19 +254,25 @@ class ComponentRegistry:
         return path
 
 
-def get_enum_value_spec(text: str | None = None) -> SchemaDict:
-    value: SchemaDict = {"type": "string"}
-    if text is not None:
-        value["enum"] = [text]
-
+def get_selected_value_spec(node: XmlNode) -> SchemaDict:
     return {
         "type": "object",
         "properties": {
-            "value": value,
+            "value": {"type": "string"},
             "selected": BOOLEAN_SCHEMA,
         },
-        "required": ["value", "selected"]
+        "required": ["value", "selected"],
+        "additionalProperties": False,
+        "x-xpath": node.xpath,
     }
+
+
+def get_enum_value_spec(node: XmlNode) -> SchemaDict:
+    spec = get_selected_value_spec(node)
+    text = node.value
+    if text is not None:
+        spec["properties"]["value"]["enum"] = [text]  # type: ignore
+    return spec
 
 
 def get_relation_spec(node: XmlNode) -> SchemaDict:
@@ -311,7 +317,8 @@ def get_relation_spec(node: XmlNode) -> SchemaDict:
                 },
             },
             "additionalProperties": False,
-        }
+        },
+        "x-xpath": node.xpath,
     }
     return spec
 
@@ -359,22 +366,25 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
         if not has_single_child:
             raise ValueError("enum expected to be primitive")
 
-        _props = {prop.name: get_enum_value_spec(prop.value) for prop in first_child.children}
+        _props = {prop.name: get_enum_value_spec(prop) for prop in first_child.children}
         spec = {
             "type": "object",
             "properties": _props,
             "additionalProperties": False,
+            "x-xpath": node.xpath,
         }
 
     elif node.type in SELECTED_VALUE_FIELD_TYPES:
         spec = {
             "type": "object",
-            "additionalProperties": get_enum_value_spec(),
+            "additionalProperties": get_selected_value_spec(node),
+            "x-xpath": node.xpath,
         }
 
     elif is_primitive:
         spec = {
             "type": "string",
+            "x-xpath": node.xpath,
         }
 
     else:
@@ -383,12 +393,14 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
             "type": "object",
             "properties": _props,
             "additionalProperties": allow_additional,
+            "x-xpath": node.xpath,
         }
 
     if is_array:
         spec = {
             "type": "array",
             "items": spec,
+            "x-xpath": spec.pop("x-xpath"),
         }
 
     return spec
@@ -496,9 +508,10 @@ def get_spec(models: List[XmlModel], endpoints: List[Endpoint]) -> APISpec:
     for ep in endpoints:
         model_names.add(ep.response_model)
         model_names.add(ep.request_model)
-    for name in model_names:
-        if name:
-            ComponentRegistry.register(name)
+    model_names.remove(None)
+
+    for name in model_names:  # type: ignore
+        ComponentRegistry.register(cast(str, name))
 
     components = ComponentRegistry.dump()
     for name, component in components.items():

@@ -28,7 +28,13 @@ def get_openapi_schema_path(vendor: str, module: str, name: str) -> str:
 
 #region Intermediate DTOs
 # for validation and to smooth over XML child/attribute distinctions
+class _RootMixin(BaseModel):
+    """Puts the extra properties at the top, which is easier to read in the json"""
+    schema_path: str
+    mount_path: str | None
+
 class XmlNode(BaseModel):
+    xpath: str
     name: str
     type: str | None
     value: str | None
@@ -38,16 +44,15 @@ class XmlNode(BaseModel):
         return f"XmlNode({self.name})"
 
 # To save passing path recursively, only the root node gets it
-class XmlModel(XmlNode):
-    schema_path: str
-    mount: str | None
+class XmlModel(XmlNode, _RootMixin):
 
     def __repr__(self):
         return f"XmlModel({self.schema_path})"
 #endregion Intermediate DTOs
 
 
-def _walk_xml(element: XmlElement) -> XmlNode:
+def _walk_xml(element: XmlElement, xpath: str) -> XmlNode:
+    xpath = f"{xpath}/{element.tag}"
     attrib = element.attrib.copy()
     field_type = attrib.pop("type", None)
     if field_type and field_type.startswith(".\\"):
@@ -64,36 +69,39 @@ def _walk_xml(element: XmlElement) -> XmlNode:
 
     children = []
     for child_element in element:
-        child = _walk_xml(child_element)
+        child = _walk_xml(child_element, xpath)
         children.append(child)
 
     return XmlNode(
         type=field_type,
         name=name,
         value=value,
-        children=children
+        children=children,
+        xpath=xpath,
     )
 
 
 def parse_xml_file(xml_file: str) -> XmlModel:
-    path_without_ext = xml_file[0:-4]
-    vendor, module, name = path_without_ext.split("/")[-3:]
-    schema_path = get_openapi_schema_path(vendor, module, name)
+    vendor, module, filename = xml_file.split("/")[-3:]
+    schema_path = get_openapi_schema_path(vendor, module, filename[0:-4])
+    rel_path = "/".join((vendor, module, filename))
 
-    tree = ElementTree.parse(xml_file)
-    items = tree.find("items")
+    root = ElementTree.parse(xml_file).getroot()
+    start_path = f"{rel_path},./"
+
+    items = root.find("items")
     if items is None:
         raise ValueError("items tag not found")  # never happens; just appeases the linter
 
-    mount = tree.find("mount")
+    mount = root.find("mount")
     mount_path = ""
     if mount is not None:
         mount_path = mount.text or ""
         if mount_path and mount_path != ":memory:":
             mount_path = f".{mount_path.replace("+", "")}"
 
-    xml_model = _walk_xml(items, xml_path=".")
-    return XmlModel(**xml_model.dict(), schema_path=schema_path)
+    xml_model = _walk_xml(items, xpath=start_path)
+    return XmlModel(**xml_model.dict(), schema_path=schema_path, mount_path=mount_path)
 
 
 def get_model_xml_files(source_folder: str) -> List[str]:
