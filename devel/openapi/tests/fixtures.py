@@ -15,8 +15,9 @@ from requests.auth import HTTPBasicAuth
 from openapi_schema_validator import validate
 from referencing import Registry, Resource
 from referencing.jsonschema import DRAFT202012
-import xml.etree.cElementTree as ElementTree
+# import xml.etree.cElementTree as ElementTree
 from xml.etree.ElementTree import Element as XmlElement
+from xml.etree.ElementTree import ElementTree, XML
 
 from loader import generate_openapi_spec as _generate_openapi_spec
 from loader import load_openapi_spec
@@ -39,9 +40,7 @@ def memoise(func):
 
         try:
             spec = memo[hashable_args]
-            print("found memo")
         except KeyError:
-            print("no memo found")
             spec = func(*args, **kwargs)
             memo[hashable_args] = spec
         return spec
@@ -119,7 +118,6 @@ class Api:
             url = url.replace(f"{{{k}}}", str(v))
 
         url = re.sub(r"//|/$", "", url)
-        print(f"URL with params: {url}")
 
         kwargs: Dict[str, Any] = {
             "url": f"{self.base_url}{url}" if url.startswith("/") else f"{self.base_url}/{url}",
@@ -190,14 +188,56 @@ def opnsense_config(api: Api) -> XmlElement:
         conf = api.get("/core/backup/download/this").text
         with open(path, "w") as file:
             file.write(conf)
-    root = ElementTree.fromstring(conf)
+    root = XML(conf)
     return root
 
-ElementFetcher = Callable[[str], List[XmlElement]]
+ElementFetcher = Callable[[str], XmlElement]
+ElementsFetcher = Callable[[str], List[XmlElement]]
 
 @fixture(scope="session")
-def get_node(opnsense_config) -> ElementFetcher:
+def get_node(opnsense_config) -> ElementsFetcher:
     return opnsense_config.findall
     # def get_node(xpath: str) -> XmlElement:
     #     return opnsense_config.findall(xpath)
     # return get_node
+
+@fixture(scope="session")
+def model_xml_registry(source_folder) -> ElementFetcher:
+    registry = {}
+    model_source_folder = None
+    for root, _, files in os.walk(source_folder, topdown=True, followlinks=True):
+        path_segments = root.split("/")
+        if path_segments[-1] != "models" or path_segments[-3] == "tests": continue
+        model_source_folder = root
+
+    if not model_source_folder:
+        raise FileNotFoundError(f"models not found in {source_folder}")
+
+    def get_xml(rel_path: str) -> XmlElement:
+        if rel_path[0] == "/":
+            rel_path = rel_path[1:]
+
+        parts = rel_path.split(",", maxsplit=1)
+        if len(parts) == 1:
+            rel_path, xpath = parts[0], None
+        else:
+            rel_path, xpath = parts
+
+        if rel_path in registry:
+            root = registry[rel_path]
+        else:
+            xml_file = os.path.join(model_source_folder, rel_path)
+            with open(xml_file) as file:
+                conf = file.read()
+            root = XML(conf)
+            registry[rel_path] = root
+
+        if not xpath:
+            return root
+
+        node = root.find(xpath)
+        if node is None:
+            raise AttributeError(f"could not find '{xpath} in {root}")
+        return node
+
+    return get_xml

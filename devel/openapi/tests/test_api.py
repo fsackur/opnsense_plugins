@@ -2,8 +2,11 @@
 
 import sys
 import os
+from io import BytesIO
 from pprint import pprint, pformat
 from typing import Dict, Any, Literal, Hashable, Mapping, Tuple
+from xml.etree.ElementTree import Element as XmlElement
+from xml.etree.ElementTree import ElementTree, XML
 import pytest
 from pytest import mark, param
 from unittest.mock import ANY
@@ -40,6 +43,11 @@ if "--log-path" in sys.argv:
 
 
 import logging
+class LastPartFilter(logging.Filter):
+    def filter(self, record):
+        record.name_last = record.name.rsplit('.', 1)[-1]
+        return True
+
 logger = logging.getLogger("api_tests")
 if log_path:
     try:
@@ -49,11 +57,25 @@ if log_path:
     handler = logging.FileHandler(log_path)
 else:
     handler = logging.StreamHandler(sys.stdout)
+
+# handler.addFilter(LastPartFilter())
+formatter = logging.Formatter('%(name)s: %(message)s')
+handler.setFormatter(formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.DEBUG)
 
 
-def format_validation_error(ex: ValidationError, response_body, schema, model_name):
+def dump_xml(node: XmlElement):
+    if node is None:
+        return ""
+    stream = BytesIO()
+    tree = ElementTree(node)
+    tree.write(stream)
+    stream.seek(0)
+    return stream.read().decode().strip()
+
+
+def format_validation_error(ex: ValidationError, response_body, schema, model_xml_registry: ElementFetcher):
     _model = response_body
     model_path = ""
     for prop in ex.path:
@@ -61,38 +83,57 @@ def format_validation_error(ex: ValidationError, response_body, schema, model_na
         model_path = f"{model_path}.{prop}"
 
     _schema = schema
+    xpath = _schema.get("x-xpath", "")
     schema_path = ""
     for prop in ex.schema_path:
         _schema = _schema[prop]
         schema_path = f"{schema_path}.{prop}"
+        if isinstance(_schema, (Dict, Mapping)):
+            xpath = _schema.get("x-xpath", xpath)
 
-    return f"Response(){model_path}: {pformat(_model)}\nSchema({model_name}){schema_path}: {_schema}"
+    node = model_xml_registry(xpath) if xpath else None
+    xml = "no_xml" if node is None else re.sub(r"\n\s*", "", dump_xml(node))
+
+    return (
+        f"{model_path}: {pformat(_model)}",
+        f"{schema_path}: {_schema}",
+        xml
+    )
 
 
-def assert_against_standard_validator(response_body, schema, model_name, logger=logger):
+def log_validation_error(ex, response_body, schema, model_name, model_xml_registry, logger):
+    response, schema, xml = format_validation_error(ex, response_body, schema, model_xml_registry)
+    logger.error(ex.message)
+    logger.getChild("response").error(response)
+    logger.getChild(f"schema.{model_name}").error(schema)
+    logger.getChild("xml").error(xml)
+
+
+def assert_against_standard_validator(response_body, schema, model_name, model_xml_registry: ElementFetcher, logger=logger):
     try:
         validate(response_body, schema)
         logger.info(f"pass")
     except Exception as ex:
         logger.error(f"{ex.__class__.__name__}: {ex.args[0]}")
         if isinstance(ex, ValidationError):
-            msg = format_validation_error(ex, response_body, schema, model_name)
-            logger.error(msg)
+            log_validation_error(ex, response_body, schema, model_name, model_xml_registry, logger)
+        else:
+            logger.exception(ex)
         raise
 
 
-def validate_all(response_body, schema, model_name, logger=logger):
+def validate_all(response_body, schema, model_name, model_xml_registry: ElementFetcher, logger=logger):
     validator = OAS31Validator(schema)
     errors = list(validator.iter_errors(response_body))
     if errors:
         for ex in errors:
-            msg = format_validation_error(ex, response_body, schema, model_name)
-            logger.error(msg)
+            log_validation_error(ex, response_body, schema, model_name, model_xml_registry, logger)
         raise best_match(errors)
 
 
 @mark.parametrize("url", urls)
-def test_endpoint(url, spec, api, get_node: ElementFetcher, logger=logger):
+def test_endpoint(url, spec, api, get_node: ElementsFetcher, model_xml_registry: ElementFetcher, logger=logger):
+    logger = logger.getChild("test_endpoint")
     logger = logger.getChild(url)
     method_op = spec._paths[url]
     for method, op in [(k, v) for k, v in method_op.items() if k in ("get", "post")]:
@@ -101,7 +142,7 @@ def test_endpoint(url, spec, api, get_node: ElementFetcher, logger=logger):
 
         model = spec.components.schemas.get(model_name, {})
         params = op.get("parameters", [])
-        path_params = supply_params(get_node, params, model, model_path)
+        path_params = supply_params(get_node, params, model, model_path or "")
 
         response = api.call(method, url, path_params)
         response_body = response.json()
@@ -109,7 +150,7 @@ def test_endpoint(url, spec, api, get_node: ElementFetcher, logger=logger):
         # print(f"response = {response_body}")
         # print(f"schema = {schema}")
         # assert_against_standard_validator(response_body, schema, url, model_name)
-        validate_all(response_body, schema, model_name, logger)
+        validate_all(response_body, schema, model_name, model_xml_registry, logger)
 
 
 def resolve_schema(schema: StrDict, components: StrDict): #-> Tuple[StrDict, str | None]:
@@ -130,9 +171,6 @@ def resolve_schema(schema: StrDict, components: StrDict): #-> Tuple[StrDict, str
         if model_path:
             breadcrumbs = model_path.split("/")
             for breadcrumb in breadcrumbs:
-                # # handle PHP's FUCKING array/dict equivalence
-                # try: breadcrumb = int(breadcrumb)
-                # except: pass
                 _schema = _schema[breadcrumb]
 
     for k, v in _schema.items():
@@ -144,7 +182,7 @@ def resolve_schema(schema: StrDict, components: StrDict): #-> Tuple[StrDict, str
     return _schema, model_name, model_path
 
 
-def supply_params(get_node: ElementFetcher, schema_params: List[Dict], model: Dict, model_path: str = ""):
+def supply_params(get_node: ElementsFetcher, schema_params: List[Dict], model: Dict, model_path: str = ""):
     nodes = []
     kwargs = {}
     if schema_params:
@@ -153,7 +191,6 @@ def supply_params(get_node: ElementFetcher, schema_params: List[Dict], model: Di
             if model_path:
                 x_model_path = model_path.replace("properties/", "").replace("items/", "")
                 xpath = f"{xpath}/{x_model_path}"
-            print(f"xpath: {xpath}")
             nodes = get_node(xpath)
         attrib = nodes[0].attrib if nodes else {}
 
