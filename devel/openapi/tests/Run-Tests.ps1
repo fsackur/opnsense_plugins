@@ -63,6 +63,7 @@ class Prop
 class TestResult
 {
     [string]$Url
+    [string]$Content
     [bool]$Pass
     [Change]$Change
     [string]$Message

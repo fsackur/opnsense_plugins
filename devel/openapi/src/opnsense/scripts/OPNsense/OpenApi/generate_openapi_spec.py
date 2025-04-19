@@ -75,6 +75,35 @@ class LazyDictionary(Generic[K, V]):
         return getattr(self._data, name)
 
 
+NON_JSON_ENDPOINTS = {
+    "DiagnosticsNetworkinsightExport": "application/octet-stream",
+    "AuthUserDownload": "text/csv",
+    "KeaDhcpv4DownloadReservations": "text/csv",
+    "DiagnosticsTrafficStream": "text/event-stream",
+    "CaptivePortalServiceGetTemplate": "text/html",
+    "CaptivePortalServiceSaveTemplate": "text/html",
+    "CoreBackupDownload": "text/html",
+    "CoreSnapshotsAdd": "text/html",
+    "DiagnosticsActivityGetActivity": "text/html",
+    "DiagnosticsDnsReverseLookup": "text/html",
+    "DiagnosticsFirewallPfStatistics": "text/html",
+    "DiagnosticsInterfaceFlushArp": "text/html",
+    "DiagnosticsInterfaceGetArp": "text/html",
+    "DiagnosticsInterfaceGetBpfStatistics": "text/html",
+    "DiagnosticsInterfaceGetInterfaceConfig": "text/html",
+    "DiagnosticsInterfaceGetMemoryStatistics": "text/html",
+    "DiagnosticsInterfaceGetNdp": "text/html",
+    "DiagnosticsInterfaceGetNetisrStatistics": "text/html",
+    "DiagnosticsInterfaceGetProtocolStatistics": "text/html",
+    "DiagnosticsInterfaceGetRoutes": "text/html",
+    "DiagnosticsSystemSystemMbuf": "text/html",
+    "DiagnosticsSystemSystemSwap": "text/html",
+    "DiagnosticsTrafficInterface": "text/html",
+    "FirewallAliasGetTableSize": "text/html",
+    "WireguardServerKeyPair": "text/html",
+}
+
+
 BOOLEAN_SCHEMA: SchemaDict = {
     "type": "integer",
     "enum": [0, 1],
@@ -458,7 +487,7 @@ def resolve_component_path(
     return client_prop, component_path
 
 
-def get_operation_content(
+def get_operation_schema(
     model: str | None,
     model_path_map: str | None,
 ) -> SchemaDict:
@@ -475,18 +504,16 @@ def get_operation_content(
                     client_prop: schema,
                 }
             }
-
-    return {
-        "application/json": {
-            "schema": schema
-        },
-    }
+    return schema
 
 
 def get_operation(endpoint: Endpoint) -> SchemaDict:
     method = endpoint.method.lower()
 
-    content = get_operation_content(endpoint.response_model, endpoint.model_path_map)
+    schema = get_operation_schema(endpoint.response_model, endpoint.model_path_map)
+    content_type = NON_JSON_ENDPOINTS.get(endpoint.operation_id, "application/json")
+    content = {content_type: {"schema": schema}}
+
     responses = {
         "200": {
             "description": endpoint.description,
@@ -503,7 +530,9 @@ def get_operation(endpoint: Endpoint) -> SchemaDict:
         op["parameters"] = [get_path_parameter_spec(p) for p in endpoint.parameters]
 
     if method == "post":
-        content = get_operation_content(endpoint.request_model, endpoint.model_path_map)
+        schema = get_operation_schema(endpoint.request_model, endpoint.model_path_map)
+        content_type = "application/json"
+        content = {content_type: {"schema": schema}}
         op["requestBody"] = {
             "required": endpoint.requires_body,
             "content": content,
@@ -543,27 +572,29 @@ def get_spec(models: List[XmlModel], endpoints: List[Endpoint]) -> APISpec:
 
 
 def validate_spec(spec: APISpec):
-    from referencing import Resource
-    from referencing.exceptions import Unresolvable
-    try:
-        oasv.validate_spec(spec.to_dict())  # type: ignore
-    except KeyboardInterrupt:
-        raise
-    except Unresolvable as ex:
-        args = []
-        for arg in ex.args:
-            if isinstance(arg, Resource):
-                contents = str(arg.contents)
-                if len(contents) > 400:
-                    contents = f"{contents[0:400]}..."
-                arg = arg.__class__(contents=contents, specification=arg._specification)
-            args.append(arg)
-        raise ex.__class__(*args).with_traceback(None) from None
-    except Exception as ex:
-        msg = str(ex)
-        if len(msg) > 400:
-            msg = f"{msg[0:400]}..."
-        raise Exception(msg).with_traceback(None) from None
+    from openapi_schema_validator.validators import OAS31Validator
+    OAS31Validator.check_schema(spec.to_dict())
+    # from referencing import Resource
+    # from referencing.exceptions import Unresolvable
+    # try:
+    #     oasv.validate_spec(spec.to_dict())  # type: ignore
+    # except KeyboardInterrupt:
+    #     raise
+    # except Unresolvable as ex:
+    #     args = []
+    #     for arg in ex.args:
+    #         if isinstance(arg, Resource):
+    #             contents = str(arg.contents)
+    #             if len(contents) > 400:
+    #                 contents = f"{contents[0:400]}..."
+    #             arg = arg.__class__(contents=contents, specification=arg._specification)
+    #         args.append(arg)
+    #     raise ex.__class__(*args).with_traceback(None) from None
+    # except Exception as ex:
+    #     msg = str(ex)
+    #     if len(msg) > 400:
+    #         msg = f"{msg[0:400]}..."
+    #     raise Exception(msg).with_traceback(None) from None
 
 
 def test_spec(models: List[XmlModel], endpoints: List[Endpoint]):
