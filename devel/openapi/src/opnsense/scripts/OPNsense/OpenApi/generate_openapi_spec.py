@@ -421,9 +421,18 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
             "x-xpath": node.xpath,
         }
 
+        def fix_regex(pattern: str) -> str:
+            while not pattern.endswith("/"):
+                flag = pattern[-1]
+                if flag == "i":
+                    raise NotImplementedError(f"pattern '{pattern}' has the ignore-case flag set.")
+                    # it is possible to compare compiled regexes in python if they are functionally equivalent, so this might be parseable.
+                pattern = pattern[:-1]
+            return pattern[1:-1]
+
         mask = quals.get("Mask")
         if mask and mask.value:
-            spec["pattern"] = mask.value
+            spec["pattern"] = fix_regex(mask.value)
         _min = quals.get("MinimumValue")
         if _min and _min.value:
             spec["minimum"] = int(_min.value)  # type: ignore
@@ -435,6 +444,9 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
             spec["default"] = _default.value if spec["type"] == "string" else int(_default.value)  # type: ignore
 
     else:
+        def is_required(node: XmlNode):
+            return any(prop for prop in node.children if prop.name == "Required")
+
         _props = {prop.name: get_model_spec(prop) for prop in props}
         spec = {
             "type": "object",
@@ -442,6 +454,9 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
             "additionalProperties": "AllowDynamic" in quals,
             "x-xpath": node.xpath,
         }
+        required = [prop.name for prop in props if is_required(prop)]
+        if required:
+            spec["required"] = required  # type: ignore
 
     if is_array:
         spec = {
@@ -502,7 +517,8 @@ def get_operation_schema(
                 "type": "object",
                 "properties": {
                     client_prop: schema,
-                }
+                },
+                "required": [client_prop],
             }
     return schema
 
