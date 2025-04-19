@@ -124,12 +124,12 @@
         <onion_service type="TextField">
           <Required>Y</Required>
           <default>exampleexample23.onion</default>
-          <mask>/^[a-z2-7]{16}\.onion$/i</mask>
+          <mask>/^[a-zA-Z2-7]{16}\.onion$/</mask>
         </onion_service>
         <auth_cookie type="TextField">
           <Required>Y</Required>
           <default>0000000000000000000000</default>
-          <mask>/^[a-z0-9\+\/]{22}$/i</mask>
+          <mask>/^[a-zA-Z0-9\+\/]{22}$/</mask>
         </auth_cookie>
       </client_auth>
     </client_authentications>

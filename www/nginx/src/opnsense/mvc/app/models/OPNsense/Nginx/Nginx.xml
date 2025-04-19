@@ -428,12 +428,12 @@
       </limit_request_connections>
       <max_body_size type="TextField">
         <Required>N</Required>
-        <mask>/^\d+[kmg]$/i</mask>
+        <mask>/^\d+[kKmMgG]$/</mask>
         <ValidationMessage>Enter a number followed by k, m or g.</ValidationMessage>
       </max_body_size>
       <body_buffer_size type="TextField">
         <Required>N</Required>
-        <mask>/^\d+[kmg]$/i</mask>
+        <mask>/^\d+[kKmMgG]$/</mask>
         <ValidationMessage>Enter a number followed by k, m or g.</ValidationMessage>
       </body_buffer_size>
       <honeypot type="BooleanField">
@@ -732,7 +732,7 @@
         <Required>N</Required>
         <multiple>Y</multiple>
         <default>80,[::]:80</default>
-        <mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/i</mask>
+        <mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/</mask>
         <ValidationMessage>Please provide a valid listen address or port, i.e. 127.0.0.1:8080, [::1]:8080, 8080.</ValidationMessage>
         <Constraints>
           <check001>
@@ -744,7 +744,7 @@
         <Required>N</Required>
         <multiple>Y</multiple>
         <default>443,[::]:443</default>
-        <mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/i</mask>
+        <mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/</mask>
         <ValidationMessage>Please provide a valid listen address or port, i.e. 127.0.0.1:8080, [::1]:8080, 8080.</ValidationMessage>
       </listen_https_address>
       <default_server type="BooleanField">
@@ -766,7 +766,7 @@
       </proxy_protocol>
       <trusted_proxies type="CSVListField">
         <Required>N</Required>
-        <mask>/^((?:\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?))*$/i</mask>
+        <mask>/^((?:\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?))*$/</mask>
         <multiple>Y</multiple>
       </trusted_proxies>
       <trusted_proxies_alias type="ModelRelationField">
@@ -894,11 +894,11 @@
       <tls_ciphers type="TextField">
         <default>ECDHE-ECDSA-CAMELLIA256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-RSA-CAMELLIA256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-ECDSA-CAMELLIA128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-RSA-CAMELLIA128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-ECDSA-CAMELLIA256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-RSA-CAMELLIA256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-ECDSA-CAMELLIA128-SHA256:ECDHE-RSA-AES128-SHA256</default>
         <Required>N</Required>
-        <mask>/^((((!|\+|-)?[A-Z][A-Z\d\+-]+)|(@STRENGTH)):?)*$/i</mask>
+        <mask>/^((((!|\+|-)?[a-zA-Z][a-zA-Z\d\+-]+)|(@[sS][tT][rR][eE][nN][gG][tT][hH])):?)*$/</mask>
       </tls_ciphers>
       <tls_ecdh_curve type="TextField">
         <Required>N</Required>
-        <mask>/^(([A-Z\d-]+):?)*$/i</mask>
+        <mask>/^(([a-zA-Z\d-]+):?)*$/</mask>
       </tls_ecdh_curve>
       <tls_prefer_server_ciphers type="BooleanField">
         <default>1</default>
@@ -938,7 +938,7 @@
       </disable_gzip>
       <naxsi_whitelist_srcip type="CSVListField">
         <Required>N</Required>
-        <mask>/^((?:\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?))*$/i</mask>
+        <mask>/^((?:\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?))*$/</mask>
         <multiple>Y</multiple>
       </naxsi_whitelist_srcip>
       <naxsi_extensive_log type="BooleanField">
@@ -990,12 +990,12 @@
       </limit_request_connections>
       <max_body_size type="TextField">
         <Required>N</Required>
-        <mask>/^\d+[kmg]$/i</mask>
+        <mask>/^\d+[kKmMgG]$/</mask>
         <ValidationMessage>Enter a number followed by k, m or g.</ValidationMessage>
       </max_body_size>
       <body_buffer_size type="TextField">
         <Required>N</Required>
-        <mask>/^\d+[kmg]$/i</mask>
+        <mask>/^\d+[kKmMgG]$/</mask>
         <ValidationMessage>Enter a number followed by k, m or g.</ValidationMessage>
       </body_buffer_size>
       <ip_acl type="ModelRelationField">
@@ -1044,7 +1044,7 @@
       <listen_address type="CSVListField">
         <Required>N</Required>
         <multiple>Y</multiple>
-        <mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/i</mask>
+        <mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/</mask>
         <ValidationMessage>Please provide a valid listen address or port, i.e. 127.0.0.1:8080, [::1]:8080, 8080.</ValidationMessage>
       </listen_address>
       <syslog_targets type="ModelRelationField">
@@ -1065,7 +1065,7 @@
       </udp>
       <trusted_proxies type="CSVListField">
         <Required>N</Required>
-        <mask>/^((?:\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?))*$/i</mask>
+        <mask>/^((?:\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?))*$/</mask>
         <multiple>Y</multiple>
       </trusted_proxies>
       <proxy_protocol type="BooleanField">
@@ -1267,12 +1267,12 @@
     <resolver type="ArrayField">
       <description type="TextField">
         <Required>Y</Required>
-        <mask>/^[^" \t]+$/i</mask>
+        <mask>/^[^" \t]+$/</mask>
       </description>
       <address type="CSVListField">
         <Required>Y</Required>
         <multiple>Y</multiple>
-        <mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\]))(:\d+|:?\d+)*)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\]))(:\d+|:?\d+)*))*$/i</mask>
+        <mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\]))(:\d+|:?\d+)*)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\]))(:\d+|:?\d+)*))*$/</mask>
         <ValidationMessage>Please provide a valid resolver address, i.e. 8.8.8.8, [2001:4860:4860::8888], 8.8.8.8:5353.</ValidationMessage>
       </address>
       <valid type="IntegerField">
@@ -1308,14 +1308,14 @@
     <http_rewrite type="ArrayField">
       <description type="TextField">
         <Required>Y</Required>
-        <mask>/^[^" \t]+$/i</mask>
+        <mask>/^[^" \t]+$/</mask>
       </description>
       <source type="TextField">
         <Required>Y</Required>
       </source>
       <destination type="TextField">
         <Required>Y</Required>
-        <mask>/^[^" \t]+$/i</mask>
+        <mask>/^[^" \t]+$/</mask>
       </destination>
       <flag type="OptionField">
         <OptionValues>
@@ -1935,7 +1935,7 @@
     <cache_path type="ArrayField">
       <path type="TextField">
         <Required>Y</Required>
-        <mask>/\/(srv|var|tmp|mnt)[a-z0-9\-\._\:\,\/]+[a-z0-9\-\._\:\,]+/i</mask>
+        <mask>/\/([sS][rR][vV]|[vV][aA][rR]|[tT][mM][pP]|[mM][nN][tT])[a-zA-Z0-9\-\._\:\,\/]+[a-zA-Z0-9\-\._\:\,]+/</mask>
       </path>
       <size type="IntegerField">
         <MinimumValue>10</MinimumValue>
@@ -2011,7 +2011,7 @@
       </severity>
       <tag type="TextField">
         <Required>N</Required>
-        <mask>/[a-z][a-z0-9]*/i</mask>
+        <mask>/[a-zA-Z][a-zA-Z0-9]*/</mask>
       </tag>
       <nohostname type="BooleanField">
         <Required>Y</Required>
