@@ -128,6 +128,7 @@ def validate_all(response_body, schema, model_name, model_xml_registry: ElementF
     else:
         logger.getChild("message").info("pass")
 
+urls = ["/firewall/alias/additem"]
 
 @mark.parametrize("url", urls)
 def test_endpoint(url, spec, api, get_node: ElementsFetcher, model_xml_registry: ElementFetcher, logger=logger):
@@ -135,15 +136,23 @@ def test_endpoint(url, spec, api, get_node: ElementsFetcher, model_xml_registry:
     logger = logger.getChild(url)
     method_op = spec._paths[url]
     for method, op in [(k, v) for k, v in method_op.items() if k in ("get", "post")]:
-        schema = op["responses"]["200"]["content"]["application/json"]["schema"]
+        schema = next(iter(op["responses"]["200"]["content"].values()))["schema"]
         schema, model_name, model_path = resolve_schema(schema, spec.components.schemas)
+
+        body_schema = None
+        if "requestBody" in op and op["requestBody"]["required"]:
+            body_schema = op["requestBody"]["content"]["application/json"]["schema"]
+            body_schema, _, _ = resolve_schema(body_schema, spec.components.schemas)
+            # logger.getChild("body_schema").info(body_schema)
+            body = create_body(body_schema)
+            logger.getChild("body").info(body)
 
         model = spec.components.schemas.get(model_name, {})
         params = op.get("parameters", [])
         path_params = supply_params(get_node, params, model, model_path or "")
 
         try:
-            response = api.call(method, url, path_params)
+            response = api.call(method, url, path_params, data=body)
             response.raise_for_status()
 
             content_type = response.headers['content-type'].split(';')[0].lower()
@@ -192,6 +201,29 @@ def resolve_schema(schema: StrDict, components: StrDict): #-> Tuple[StrDict, str
             model_path = model_path or _model_path
         _schema[k] = v
     return _schema, model_name, model_path
+
+
+def create_body(schema: StrDict):
+    schema = schema.copy()
+    _type = schema.pop("type")
+    if _type == "object" and "properties" in schema:
+        body = {}
+        for k in schema.get("required", []): #schema["properties"].keys()):
+            body[k] = create_body(schema["properties"][k])
+        return body
+    elif _type == "object":
+        raise NotImplementedError(f"Not expecting associative array in {schema}")
+    elif _type == "array":
+        return [create_body(schema["items"])]
+    else:
+        for k in "default", "minimum", "maximum":
+            if k in schema:
+                return schema[k]
+        if "enum" in schema:
+            return schema["enum"][0]
+        if _type == "string":
+            return "foo"
+        return 42
 
 
 def supply_params(get_node: ElementsFetcher, schema_params: List[Dict], model: Dict, model_path: str = ""):
