@@ -3,6 +3,7 @@
 import sys
 import os
 from io import BytesIO
+import csv
 from pprint import pprint, pformat
 from typing import Dict, Any, Literal, Hashable, Mapping, Tuple
 from xml.etree.ElementTree import Element as XmlElement
@@ -143,7 +144,18 @@ def test_endpoint(url, spec, api, get_node: ElementsFetcher, model_xml_registry:
 
         try:
             response = api.call(method, url, path_params)
-            response_body = response.json()
+            response.raise_for_status()
+
+            content_type = response.headers['content-type'].split(';')[0].lower()
+            logger.getChild("content").info(content_type)
+
+            if content_type == "application/json":
+                response_body = response.json()
+            elif content_type == "text/csv":
+                response_body = read_csv(response.text)
+            else:
+                response_body = response.text
+            print("\n", response_body)
         except Exception as ex:
             logger.getChild("message").error(ex)
 
@@ -199,3 +211,9 @@ def supply_params(get_node: ElementsFetcher, schema_params: List[Dict], model: D
             value = attrib[name] if name in attrib else param["schema"].get("default")
             kwargs[name] = value
     return kwargs
+
+
+def read_csv(content: str):
+    lines = content.split("\n")
+    reader = csv.DictReader(lines)
+    return list(reader)
