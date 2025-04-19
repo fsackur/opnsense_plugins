@@ -160,7 +160,7 @@
         <Required>Y</Required>
       </skip_authenticated>
       <extended_headers_rcpt type="CSVListField">
-        <Mask>/[a-z0-9\.\-_@,]+/i</Mask>
+        <Mask>/[a-zA-Z0-9\.\-_@,]+/</Mask>
         <Required>N</Required>
       </extended_headers_rcpt>
     </milter_headers>

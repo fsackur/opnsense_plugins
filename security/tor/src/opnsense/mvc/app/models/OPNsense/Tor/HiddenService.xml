@@ -10,7 +10,7 @@
       </enabled>
       <name type="TextField">
         <Required>Y</Required>
-        <Mask>/^[a-z0-9_-]+$/i</Mask>
+        <Mask>/^[a-zA-Z0-9_-]+$/</Mask>
         <ValidationMessage>The name should only consist of alphanumeric characters, dashes and underscores.</ValidationMessage>
       </name>
       <type type="OptionField">
@@ -24,7 +24,7 @@
       <clients type="CSVListField">
         <Multiple>Y</Multiple>
         <Required>N</Required>
-        <Mask>/^([a-z0-9_+-]+,)*([a-z0-9_+-]*)$/i</Mask>
+        <Mask>/^([a-zA-Z0-9_+-]+,)*([a-zA-Z0-9_+-]*)$/</Mask>
         <ValidationMessage>The authorized clients should only consist of alphanumeric characters, dashes, underscores and plus sign.</ValidationMessage>
       </clients>
     </service>

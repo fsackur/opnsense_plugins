@@ -1368,7 +1368,7 @@
                     <Required>N</Required>
                     <!-- Key format: (comment)? key-type :SPACE: key-base64 (:SPACE: comment)?
                          Reference: https://stackoverflow.com/a/475217 -->
-                    <Mask>/^.+?\s(?:[a-z0-9+\/]{4})*(?:[a-z0-9+\/]{2}==|[a-z0-9+\/]{3}=)?(?:\s.+?)?$/i</Mask>
+                    <Mask>/^.+?\s(?:[a-zA-Z0-9+\/]{4})*(?:[a-zA-Z0-9+\/]{2}==|[a-zA-Z0-9+\/]{3}=)?(?:\s.+?)?$/</Mask>
                     <ValidationMessage>Should be a valid public SSH host key (see "known_hosts").</ValidationMessage>
                 </sftp_host_key>
                 <sftp_port type="IntegerField">
@@ -1448,7 +1448,7 @@
                     <Required>N</Required>
                     <!-- Key format: (comment)? key-type :SPACE: key-base64 (:SPACE: comment)?
                          Reference: https://stackoverflow.com/a/475217 -->
-                    <Mask>/^.+?\s(?:[a-z0-9+\/]{4})*(?:[a-z0-9+\/]{2}==|[a-z0-9+\/]{3}=)?(?:\s.+?)?$/i</Mask>
+                    <Mask>/^.+?\s(?:[a-zA-Z0-9+\/]{4})*(?:[a-zA-Z0-9+\/]{2}==|[a-zA-Z0-9+\/]{3}=)?(?:\s.+?)?$/</Mask>
                     <ValidationMessage>Should be a valid public SSH host key (see "known_hosts").</ValidationMessage>
                 </remote_ssh_host_key>
                 <remote_ssh_port type="IntegerField">

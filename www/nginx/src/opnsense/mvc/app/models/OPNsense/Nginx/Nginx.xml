@@ -372,11 +372,11 @@
                 <Multiple>Y</Multiple>
             </limit_request_connections>
             <max_body_size type="TextField">
-                <Mask>/^\d+[kmg]$/i</Mask>
+                <Mask>/^\d+[kmgKMG]$/</Mask>
                 <ValidationMessage>Enter a number followed by k, m or g.</ValidationMessage>
             </max_body_size>
             <body_buffer_size type="TextField">
-                <Mask>/^\d+[kmg]$/i</Mask>
+                <Mask>/^\d+[kmgKMG]$/</Mask>
                 <ValidationMessage>Enter a number followed by k, m or g.</ValidationMessage>
             </body_buffer_size>
             <honeypot type="BooleanField">
@@ -662,7 +662,7 @@
             </syslog_targets>
             <listen_http_address type="CSVListField">
                 <Multiple>Y</Multiple>
-                <Mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/i</Mask>
+                <Mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/</Mask>
                 <ValidationMessage>Please provide a valid listen address or port, i.e. 127.0.0.1:8080, [::1]:8080, 8080.</ValidationMessage>
                 <Constraints>
                     <check001>
@@ -672,7 +672,7 @@
             </listen_http_address>
             <listen_https_address type="CSVListField">
                 <Multiple>Y</Multiple>
-                <Mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/i</Mask>
+                <Mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/</Mask>
                 <ValidationMessage>Please provide a valid listen address or port, i.e. 127.0.0.1:8080, [::1]:8080, 8080.</ValidationMessage>
             </listen_https_address>
             <default_server type="BooleanField">
@@ -693,7 +693,7 @@
                 <Required>Y</Required>
             </proxy_protocol>
             <trusted_proxies type="CSVListField">
-                <Mask>/^((?:\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?))*$/i</Mask>
+                <Mask>/^((?:\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?))*$/</Mask>
                 <Multiple>Y</Multiple>
             </trusted_proxies>
             <trusted_proxies_alias type="ModelRelationField">
@@ -812,10 +812,10 @@
                 <Default>TLSv1.2,TLSv1.3</Default>
             </tls_protocols>
             <tls_ciphers type="TextField">
-                <Mask>/^((((!|\+|-)?[A-Z][A-Z\d\+-]+)|(@STRENGTH)):?)*$/i</Mask>
+                <Mask>/^((((!|\+|-)?[a-zA-Z][a-zA-Z\d\+-]+)|(@STRENGTH)):?)*$/</Mask>
             </tls_ciphers>
             <tls_ecdh_curve type="TextField">
-                <Mask>/^(([A-Z\d-]+):?)*$/i</Mask>
+                <Mask>/^(([a-zA-Z\d-]+):?)*$/</Mask>
             </tls_ecdh_curve>
             <tls_prefer_server_ciphers type="BooleanField">
                 <Default>1</Default>
@@ -852,7 +852,7 @@
                 <Required>Y</Required>
             </disable_gzip>
             <naxsi_whitelist_srcip type="CSVListField">
-                <Mask>/^((?:\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?))*$/i</Mask>
+                <Mask>/^((?:\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?))*$/</Mask>
                 <Multiple>Y</Multiple>
             </naxsi_whitelist_srcip>
             <naxsi_extensive_log type="BooleanField">
@@ -900,11 +900,11 @@
                 <Multiple>Y</Multiple>
             </limit_request_connections>
             <max_body_size type="TextField">
-                <Mask>/^\d+[kmg]$/i</Mask>
+                <Mask>/^\d+[kmgKMG]$/</Mask>
                 <ValidationMessage>Enter a number followed by k, m or g.</ValidationMessage>
             </max_body_size>
             <body_buffer_size type="TextField">
-                <Mask>/^\d+[kmg]$/i</Mask>
+                <Mask>/^\d+[kmgKMG]$/</Mask>
                 <ValidationMessage>Enter a number followed by k, m or g.</ValidationMessage>
             </body_buffer_size>
             <ip_acl type="ModelRelationField">
@@ -947,7 +947,7 @@
         <stream_server type="ArrayField">
             <listen_address type="CSVListField">
                 <Multiple>Y</Multiple>
-                <Mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/i</Mask>
+                <Mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\])):\d+|:?\d+))*$/</Mask>
                 <ValidationMessage>Please provide a valid listen address or port, i.e. 127.0.0.1:8080, [::1]:8080, 8080.</ValidationMessage>
             </listen_address>
             <syslog_targets type="ModelRelationField">
@@ -966,7 +966,7 @@
                 <Default>0</Default>
             </udp>
             <trusted_proxies type="CSVListField">
-                <Mask>/^((?:\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-f0-9\:]+)(?:\/\d+)?))*$/i</Mask>
+                <Mask>/^((?:\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?(,?(?:(?:(\d+\.){3,3}\d+|[a-fA-F0-9\:]+)(?:\/\d+)?))*$/</Mask>
                 <Multiple>Y</Multiple>
             </trusted_proxies>
             <proxy_protocol type="BooleanField">
@@ -1149,12 +1149,12 @@
         <resolver type="ArrayField">
             <description type="TextField">
                 <Required>Y</Required>
-                <Mask>/^[^" \t]+$/i</Mask>
+                <Mask>/^[^" \t]+$/</Mask>
             </description>
             <address type="CSVListField">
                 <Required>Y</Required>
                 <Multiple>Y</Multiple>
-                <Mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\]))(:\d+|:?\d+)*)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-f0-9:]{1,4}(?::[a-f0-9:]{0,4}){1,7}\]))(:\d+|:?\d+)*))*$/i</Mask>
+                <Mask>/^(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\]))(:\d+|:?\d+)*)(?:\s*,\s*(?:(?:(?:\d{1,3}(?:\.\d{1,3}){3})|(?:\[[a-fA-F0-9:]{1,4}(?::[a-fA-F0-9:]{0,4}){1,7}\]))(:\d+|:?\d+)*))*$/</Mask>
                 <ValidationMessage>Please provide a valid resolver address, i.e. 8.8.8.8, [2001:4860:4860::8888], 8.8.8.8:5353.</ValidationMessage>
             </address>
             <valid type="IntegerField">
@@ -1185,14 +1185,14 @@
         <http_rewrite type="ArrayField">
             <description type="TextField">
                 <Required>Y</Required>
-                <Mask>/^[^" \t]+$/i</Mask>
+                <Mask>/^[^" \t]+$/</Mask>
             </description>
             <source type="TextField">
                 <Required>Y</Required>
             </source>
             <destination type="TextField">
                 <Required>Y</Required>
-                <Mask>/^[^" \t]+$/i</Mask>
+                <Mask>/^[^" \t]+$/</Mask>
             </destination>
             <flag type="OptionField">
                 <OptionValues>
@@ -1768,7 +1768,7 @@
         <cache_path type="ArrayField">
             <path type="TextField">
                 <Required>Y</Required>
-                <Mask>/\/(srv|var|tmp|mnt)[a-z0-9\-\._\:\,\/]+[a-z0-9\-\._\:\,]+/i</Mask>
+                <Mask>/\/([sS][rR][vV]|[vV][aA][rR]|[tT][mM][pP]|[mM][nN][tT])[a-zA-Z0-9\-\._\:\,\/]+[a-zA-Z0-9\-\._\:\,]+/</Mask>
             </path>
             <size type="IntegerField">
                 <MinimumValue>10</MinimumValue>
@@ -1787,7 +1787,7 @@
         <proxy_cache_valid type="ArrayField">
             <description type="TextField">
                 <Required>Y</Required>
-                <Mask>/^[^" \t]+$/i</Mask>
+                <Mask>/^[^" \t]+$/</Mask>
             </description>
             <code type="CSVListField">
                 <Required>Y</Required>
@@ -1854,7 +1854,7 @@
                 <Default>error</Default>
             </severity>
             <tag type="TextField">
-                <Mask>/[a-z][a-z0-9]*/i</Mask>
+                <Mask>/[a-zA-Z][a-zA-Z0-9]*/</Mask>
             </tag>
             <nohostname type="BooleanField">
                 <Required>Y</Required>

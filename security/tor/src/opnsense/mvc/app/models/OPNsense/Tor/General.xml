@@ -123,13 +123,13 @@
         </enabled>
         <onion_service type="TextField">
           <Required>Y</Required>
-          <Default>exampleexample23.onion</Default>
-          <Mask>/^[a-z2-7]{16}\.onion$/i</Mask>
+          <default>exampleexample23.onion</default>
+          <Mask>/^[a-zA-Z2-7]{16}\.onion$/</Mask>
         </onion_service>
         <auth_cookie type="TextField">
           <Required>Y</Required>
-          <Default>0000000000000000000000</Default>
-          <Mask>/^[a-z0-9\+\/]{22}$/i</Mask>
+          <default>0000000000000000000000</default>
+          <Mask>/^[a-zA-Z0-9\+\/]{22}$/</Mask>
         </auth_cookie>
       </client_auth>
     </client_authentications>
