@@ -426,13 +426,13 @@ def get_model_spec(node: XmlNode) -> SchemaDict:
             spec["pattern"] = mask.value
         _min = quals.get("MinimumValue")
         if _min and _min.value:
-            spec["minimum"] = _min.value
+            spec["minimum"] = int(_min.value)  # type: ignore
         _max = quals.get("MaximumValue")
         if _max and _max.value:
-            spec["maximum"] = _max.value
+            spec["maximum"] = int(_max.value)  # type: ignore
         _default = quals.get("Default", quals.get("default"))
         if _default and _default.value:
-            spec["default"] = _default.value if spec["type"] == "string" else int(_default.value)
+            spec["default"] = _default.value if spec["type"] == "string" else int(_default.value)  # type: ignore
 
     else:
         _props = {prop.name: get_model_spec(prop) for prop in props}
