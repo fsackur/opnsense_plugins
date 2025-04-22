@@ -3,8 +3,12 @@
 from typing import *
 import json
 import yaml
+import logging
+import sys
 from apispec import APISpec
 from jsf import JSF
+from fixtures import model_xml_registry as model_xml_registry_fixture
+from test_api import validate_all
 
 
 def load_openapi_spec(path: str) -> APISpec:
@@ -46,6 +50,7 @@ def generate(spec: APISpec, models: str | Container[str] | None = None) -> Dict[
     for model_name, schema in schemas.items():
         faker = JSF(schema, **faker_kwargs)
         data = faker.generate()
+        validate(data, schema, model_name)
         output[model_name] = data
 
     return output
@@ -57,11 +62,26 @@ def export(path: str, data: Dict[str, Any]):
         file.write(json_data)
 
 
+def validate(data, schema, model_name):
+    source_folder = "/home/freddie/gitroot/upstream/opnsense/core/src/opnsense/mvc/app/models/"
+    model_xml_registry = model_xml_registry_fixture.__wrapped__(source_folder)
+
+    logger = logging.getLogger()
+    handler = logging.StreamHandler(sys.stdout)
+    formatter = logging.Formatter('%(name)s: %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+
+    # validate_all(data, schema, model_name, model_xml_registry, logger=logger)
+
+
 if __name__ == "__main__":
     path = "/gitroot/upstream/opnsense/plugins/devel/openapi/src/opnsense/scripts/OPNsense/OpenApi/openapi.yml"
     spec = load_openapi_spec(path)
 
     model_name = "opnsense.firewall.alias"
+    model_name = "opnsense.captiveportal.captiveportal"
     mock_models = generate(spec, model_name)
 
     output_file = "mock_models.json"

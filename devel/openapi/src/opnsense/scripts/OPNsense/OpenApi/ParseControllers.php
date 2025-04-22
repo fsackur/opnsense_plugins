@@ -28,6 +28,13 @@ use RecursiveDirectoryIterator;
 $DEFAULT_SOURCE_DIR = "/usr/local/opnsense/mvc/app";
 
 
+enum ApiBase: string {
+    // case undefined = "";
+    case Model = "model";
+    case Service = "service";
+}
+
+
 class Parameter {
     public $name;
     public $has_default;
@@ -166,6 +173,7 @@ class Method {
 class Controller {
     public $name;
     public $parent;
+    public ?ApiBase $action_type;
     public $methods = [];
     public $model;
     public $model_name;
@@ -176,12 +184,24 @@ class Controller {
     {
         $name = $rclass->getName();
 
+        $action_type = null;
         $parent = null;
         $parent_name = null;
         $rparent = $rclass->getParentClass();
         if ($rparent) {
             $parent_name = $rparent->getName();
             $parent = ControllerRegistry::get($parent_name);
+            if ($parent) {
+                $action_type = $parent->action_type;
+            }
+        }
+
+        if (!$action_type) {
+            if ($name === "OPNsense\\Base\\ApiMutableModelControllerBase") {
+                $action_type = ApiBase::Model;
+            } elseif ($name === "OPNsense\\Base\\ApiMutableServiceControllerBase") {
+                $action_type = ApiBase::Service;
+            }
         }
 
         $model = null;
@@ -220,6 +240,7 @@ class Controller {
 
         $this->name = $name;
         $this->parent = $parent_name;
+        $this->action_type = $action_type;
         $this->model = $model;
         $this->model_name = $model_name;
         $this->is_abstract = $rclass->isAbstract();

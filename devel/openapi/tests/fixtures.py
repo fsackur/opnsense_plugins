@@ -205,6 +205,7 @@ def get_node(opnsense_config) -> ElementsFetcher:
 
 @fixture(scope="session")
 def model_xml_registry(source_folder) -> ElementFetcher:
+    source_folder = os.path.normpath(source_folder)
     registry = {}
     model_source_folder = None
     for root, _, files in os.walk(source_folder, topdown=True, followlinks=True):
